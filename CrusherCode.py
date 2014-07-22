@@ -23,33 +23,34 @@ plot(rstvty(temperature), 293, 297)
 #leave the unneccasary parts out though
 #setup the constants
 perm0 = 1.25663706*1e-6
-t(rcoil, z, r) = (r+rcoil)^2+z^2
-argm(rcoil, z, r)= 4*rcoil*r/t(rcoil,z,r)
-dbcoilflux(rcoil, z, r, curren) = (2*perm0/(2*pi))*curren*((rcoil*r)/(argm(rcoil, z, r)/t(rcoil, z, r)^0.5))*((2-argm(rcoil, z, r))*elliptic_kc(argm(rcoil, z, r))-(2*elliptic_ec(argm(rcoil, z, r))))
+t(rcoil, zc, rc) = (rc+rcoil)^2+zc^2
+argm(rcoil, zc, rc)= 4*rcoil*rc/t(rcoil,zc,rc)
+dbcoilflux(rcoil, zc, rc, curren) = (2*perm0/(2*pi))*curren*((rcoil*rc)/(argm(rcoil, zc, rc)/t(rcoil, zc, rc)^0.5))*((2-argm(rcoil, zc, rc))*elliptic_kc(argm(rcoil, zc, rc))-(2*elliptic_ec(argm(rcoil, zc, rc))))
 ///
 }}}
 
 {{{id=4|
 #Now graph the flux along the z coordinate at the edge of a coil and see if it makes sense
-plot(dbcoilflux(2, z, 2, 1), 0, 5)
+plot(dbcoilflux(2, zc, 2, 1), 0, 5)
 ///
 <html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
 
-{{{id=5|
+{{{id=16|
 #Test along the radial direction in the plane of the coil
-plot(dbcoilflux(2, 0, r, 1), 2, 5)
+plot(dbcoilflux(2, 0, rc, 1), 2, 5)
 ///
 <html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
 
-{{{id=7|
+{{{id=15|
 #and inside the coil, being careful to avoid the point r = 0
-plot(dbcoilflux(2, 0, r, 1), 0.01, 2)
+plot(dbcoilflux(2, 0, rc, 1), 0.01, 2)
 ///
+<html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
 
-{{{id=8|
+{{{id=18|
 #The above was to provide the magnetic flux at one coil due to another for finding 
 #the mutual inductance of a set of two coils.  The following models the coils and 
 #calls the above functions to fill in the mutual induction matrix
@@ -88,13 +89,65 @@ for i in range(0, 9):
 for i in range(1, 9):
     for j in range(0, i):
         mfull[i,j] = mfull[j,i]
+        
+#The mutual inductance array has to be calculated multiple times, so I'm putting 
+#it into a Python funcion, (I hope)
+def find_mutual_inductance(mfullarray):
+    #first for the off-diagonal elements
+    for i in range(0, 8):
+       for j in range(i+1, 9):
+            mfullarray[i,j] = dbcoilflux(r[i], z[j]-z[i], r[j]-dr[j], 1)
+    
+    #next for the diagonal elements
+    for i in range(0, 9):
+        mfullarray[i,i] = dbcoilflux(r[i], z[i]-z[i], r[i]-dr[i], 1)
+   
+    #finally copy the off diagonal elements to the other side of the array
+    for i in range(1, 9):
+        for j in range(0, i):
+            mfullarray[i,j] = mfull[j,i]
 ///
 }}}
 
-{{{id=9|
+{{{id=17|
 #Checking that mfull is filled up appropriately.  There were issues with the manner in which
-#Python handles loop indexing vs. IDL
 mfull
+///
+array([[  3.41443527e-05,   1.95128445e-05,   1.51936075e-05,
+          1.27052998e-05,   1.09795070e-05,   9.67626152e-06,
+          8.64261251e-06,   7.79619058e-06,   7.08735215e-06],
+       [  1.95128445e-05,   3.41443527e-05,   1.95128445e-05,
+          1.51936075e-05,   1.27052998e-05,   1.09795070e-05,
+          9.67626152e-06,   8.64261251e-06,   7.79619058e-06],
+       [  1.51936075e-05,   1.95128445e-05,   3.41443527e-05,
+          1.95128445e-05,   1.51936075e-05,   1.27052998e-05,
+          1.09795070e-05,   9.67626152e-06,   8.64261251e-06],
+       [  1.27052998e-05,   1.51936075e-05,   1.95128445e-05,
+          3.41443527e-05,   1.95128445e-05,   1.51936075e-05,
+          1.27052998e-05,   1.09795070e-05,   9.67626152e-06],
+       [  1.09795070e-05,   1.27052998e-05,   1.51936075e-05,
+          1.95128445e-05,   3.41443527e-05,   1.95128445e-05,
+          1.51936075e-05,   1.27052998e-05,   1.09795070e-05],
+       [  9.67626152e-06,   1.09795070e-05,   1.27052998e-05,
+          1.51936075e-05,   1.95128445e-05,   3.41443527e-05,
+          1.95128445e-05,   1.51936075e-05,   1.27052998e-05],
+       [  8.64261251e-06,   9.67626152e-06,   1.09795070e-05,
+          1.27052998e-05,   1.51936075e-05,   1.95128445e-05,
+          3.41443527e-05,   1.95128445e-05,   1.51936075e-05],
+       [  7.79619058e-06,   8.64261251e-06,   9.67626152e-06,
+          1.09795070e-05,   1.27052998e-05,   1.51936075e-05,
+          1.95128445e-05,   3.41443527e-05,   1.95128445e-05],
+       [  7.08735215e-06,   7.79619058e-06,   8.64261251e-06,
+          9.67626152e-06,   1.09795070e-05,   1.27052998e-05,
+          1.51936075e-05,   1.95128445e-05,   3.41443527e-05]])
+}}}
+
+{{{id=9|
+#next, check that I get the same results when calling the function
+mfullcheck = numpy.array(range(81), dtype=float)
+mfullcheck.shape=(9,9)
+find_mutual_inductance(mfullcheck)
+mfullcheck
 ///
 array([[  3.41443527e-05,   1.95128445e-05,   1.51936075e-05,
           1.27052998e-05,   1.09795070e-05,   9.67626152e-06,
@@ -253,7 +306,6 @@ work[0] = 0.0
 for jj in range(0, 3):
     rstor[jj,0] = r[jj+3]
     zstor[jj,0] = z[jj+3]
-    
 ///
 }}}
 
@@ -304,6 +356,5 @@ for kk in range(0,ntim):
     #
     #now, finally, the first new simulation step, compute the currents
     #
-    
 ///
 }}}
