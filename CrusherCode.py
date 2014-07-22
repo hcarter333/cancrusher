@@ -70,26 +70,8 @@ dr = numpy.array([.01, .01, .01, .01, .01, .01, .01, .01, .01], dtype=float)
 vr = numpy.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], dtype=float)
 vz = numpy.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], dtype=float)
 
-#setting up the mutual inductance raw flux array
-mfull = numpy.array(range(81), dtype=float)
-mfull.shape=(9,9)
+#NOTE:  r, z, and vr will all be modified by move can
 
-#Now, fill the array with mutual inductance fluxes using a loop 
-#and calling dbcoilflux(rcoil, z, r, curren)
-#first for the off-diagonal elements
-for i in range(0, 8):
-    for j in range(i+1, 9):
-        mfull[i,j] = dbcoilflux(r[i], z[j]-z[i], r[j]-dr[j], 1)
-        
-#next for the diagonal elements
-for i in range(0, 9):
-    mfull[i,i] = dbcoilflux(r[i], z[i]-z[i], r[i]-dr[i], 1)
-    
-#finally copy the off diagonal elements to the other side of the array
-for i in range(1, 9):
-    for j in range(0, i):
-        mfull[i,j] = mfull[j,i]
-        
 #The mutual inductance array has to be calculated multiple times, so I'm putting 
 #it into a Python funcion, (I hope)
 def find_mutual_inductance(mfullarray):
@@ -106,6 +88,14 @@ def find_mutual_inductance(mfullarray):
     for i in range(1, 9):
         for j in range(0, i):
             mfullarray[i,j] = mfull[j,i]
+            
+    return mfullarray
+
+#setting up the mutual inductance raw flux array
+mfull = numpy.array(range(81), dtype=float)
+mfull.shape=(9,9)
+
+mfull = find_mutual_inductance(mfull)
 ///
 }}}
 
@@ -188,30 +178,37 @@ mm = numpy.array(range(49), dtype=float)
 mm.shape=(7,7)
 mmold = mm.copy()
 
-jm = numpy.array(range(6), dtype=float)
-
-#nt contains the fixed coil portion of the mutual inductance array
-#it's actually just a 
-nt = mfull[0:3-1, 0:3-1].copy()
-ntt = sum(nt)
-
-#jt is used to total the mutual inductance associated with each moveable coil
-#the result is placed in the jm array
-for i in range(0, 3):
-    jt=mfull[i+3,0:3-1]
-    jm[i]=sum(jt)
-
-#Here's why mm was dimensioned one bigger than it should have been
-#I don't have a good reason for this yet other than it came out of the old code
-#notice, however that we do overwrite the 0 row and column next
-mm = mfull[2:9, 2:9].copy()
-#mm = mm*1e6
-
-for i in range(1, 7):
-    mm[i,0] = 1e6*jm[i-1]
-    mm[0,i] = 1e6*jm[i-1]
+#also create a function here that encapsulates the reduced array creation
+#since this will need to be called multiple times
+def make_reduced_matrix(mreduced, mfullwork):
+    jmwork = numpy.array(range(6), dtype=float)
+    #nt contains the fixed coil portion of the mutual inductance array
+    #it's actually just a 
+    ntwork = mfull[0:3-1, 0:3-1].copy()
+    nttwork = sum(ntwork)
     
-mm[0,0] = 1e6*ntt
+    #jt is used to total the mutual inductance associated with each moveable coil
+    #the result is placed in the jm array
+    for i in range(0, 3):
+        jtwork=mfull[i+3,0:3-1]
+        jmwork[i]=sum(jtwork)
+    
+    #Here's why mm was dimensioned one bigger than it should have been
+    #I don't have a good reason for this yet other than it came out of the old code
+    #notice, however that we do overwrite the 0 row and column next
+    mreduced = mfullwork[2:9, 2:9].copy()
+    #mm = mm*1e6
+
+    for i in range(1, 7):
+        mreduced[i,0] = 1e6*jmwork[i-1]
+        mreduced[0,i] = 1e6*jmwork[i-1]
+    
+    mreduced[0,0] = 1e6*nttwork
+
+    return mreduced
+
+
+mm = make_reduced_matrix(mm, mfull)
 #mm is now the mutual inductance matrix in microHenrys
 #The calculation portions of the initialize procedure are now completely implemented
 #correctly???
@@ -314,8 +311,43 @@ for jj in range(0, 3):
 ///
 }}}
 
-{{{id=12|
+{{{id=19|
 mm
+///
+array([[  1.07314394e+02,   2.78989073e+01,   2.36848067e+01,
+          2.06557685e+01,   3.00000000e+06,   4.00000000e+06,
+          5.00000000e+06],
+       [  2.78989073e+01,   3.41443527e-05,   1.95128445e-05,
+          1.51936075e-05,   1.27052998e-05,   1.09795070e-05,
+          9.67626152e-06],
+       [  2.36848067e+01,   1.95128445e-05,   3.41443527e-05,
+          1.95128445e-05,   1.51936075e-05,   1.27052998e-05,
+          1.09795070e-05],
+       [  2.06557685e+01,   1.51936075e-05,   1.95128445e-05,
+          3.41443527e-05,   1.95128445e-05,   1.51936075e-05,
+          1.27052998e-05],
+       [  3.00000000e+06,   1.27052998e-05,   1.51936075e-05,
+          1.95128445e-05,   3.41443527e-05,   1.95128445e-05,
+          1.51936075e-05],
+       [  4.00000000e+06,   1.09795070e-05,   1.27052998e-05,
+          1.51936075e-05,   1.95128445e-05,   3.41443527e-05,
+          1.95128445e-05],
+       [  5.00000000e+06,   9.67626152e-06,   1.09795070e-05,
+          1.27052998e-05,   1.51936075e-05,   1.95128445e-05,
+          3.41443527e-05]])
+}}}
+
+{{{id=20|
+#make sure that the reduced matrix function works properly
+mmtest = numpy.array(range(49), dtype=float)
+mmtest.shape=(7,7)
+
+mmtest = make_reduced_matrix(mmtest, mfull)
+///
+}}}
+
+{{{id=12|
+mmtest
 ///
 array([[  1.07314394e+02,   2.78989073e+01,   2.36848067e+01,
           2.06557685e+01,   3.00000000e+06,   4.00000000e+06,
