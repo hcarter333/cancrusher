@@ -188,8 +188,8 @@ def make_reduced_matrix(mreduced, mfullwork):
     nttwork = sum(ntwork)
     
     #jt is used to total the mutual inductance associated with each moveable coil
-    #the result is placed in the jm array
-    for i in range(0, 3):
+    #the result is placed in the jmwork array
+    for i in range(0, 6):
         jtwork=mfull[i+3,0:3-1]
         jmwork[i]=sum(jtwork)
     
@@ -315,8 +315,8 @@ for jj in range(0, 3):
 mm
 ///
 array([[  1.07314394e+02,   2.78989073e+01,   2.36848067e+01,
-          2.06557685e+01,   3.00000000e+06,   4.00000000e+06,
-          5.00000000e+06],
+          2.06557685e+01,   1.83188740e+01,   1.64388031e+01,
+          1.48835427e+01],
        [  2.78989073e+01,   3.41443527e-05,   1.95128445e-05,
           1.51936075e-05,   1.27052998e-05,   1.09795070e-05,
           9.67626152e-06],
@@ -326,13 +326,13 @@ array([[  1.07314394e+02,   2.78989073e+01,   2.36848067e+01,
        [  2.06557685e+01,   1.51936075e-05,   1.95128445e-05,
           3.41443527e-05,   1.95128445e-05,   1.51936075e-05,
           1.27052998e-05],
-       [  3.00000000e+06,   1.27052998e-05,   1.51936075e-05,
+       [  1.83188740e+01,   1.27052998e-05,   1.51936075e-05,
           1.95128445e-05,   3.41443527e-05,   1.95128445e-05,
           1.51936075e-05],
-       [  4.00000000e+06,   1.09795070e-05,   1.27052998e-05,
+       [  1.64388031e+01,   1.09795070e-05,   1.27052998e-05,
           1.51936075e-05,   1.95128445e-05,   3.41443527e-05,
           1.95128445e-05],
-       [  5.00000000e+06,   9.67626152e-06,   1.09795070e-05,
+       [  1.48835427e+01,   9.67626152e-06,   1.09795070e-05,
           1.27052998e-05,   1.51936075e-05,   1.95128445e-05,
           3.41443527e-05]])
 }}}
@@ -348,6 +348,53 @@ mmtest = make_reduced_matrix(mmtest, mfull)
 
 {{{id=12|
 mmtest
+///
+array([[  1.07314394e+02,   2.78989073e+01,   2.36848067e+01,
+          2.06557685e+01,   1.83188740e+01,   1.64388031e+01,
+          1.48835427e+01],
+       [  2.78989073e+01,   3.41443527e-05,   1.95128445e-05,
+          1.51936075e-05,   1.27052998e-05,   1.09795070e-05,
+          9.67626152e-06],
+       [  2.36848067e+01,   1.95128445e-05,   3.41443527e-05,
+          1.95128445e-05,   1.51936075e-05,   1.27052998e-05,
+          1.09795070e-05],
+       [  2.06557685e+01,   1.51936075e-05,   1.95128445e-05,
+          3.41443527e-05,   1.95128445e-05,   1.51936075e-05,
+          1.27052998e-05],
+       [  1.83188740e+01,   1.27052998e-05,   1.51936075e-05,
+          1.95128445e-05,   3.41443527e-05,   1.95128445e-05,
+          1.51936075e-05],
+       [  1.64388031e+01,   1.09795070e-05,   1.27052998e-05,
+          1.51936075e-05,   1.95128445e-05,   3.41443527e-05,
+          1.95128445e-05],
+       [  1.48835427e+01,   9.67626152e-06,   1.09795070e-05,
+          1.27052998e-05,   1.51936075e-05,   1.95128445e-05,
+          3.41443527e-05]])
+}}}
+
+{{{id=13|
+#The simulation code lives in this cell
+#currently, the full time range takes a while with ntim
+#for kk in range(0,ntim):
+for kk in range(0,3):
+    #if the counter has advanced beyond nchange, then make the time step larger
+    if cntr >= nchange:
+        dt = ddt*10
+    time = time + dt
+    #store the current time in microseconds
+    ptime[cntr] = time*1e3
+    
+    #now, find the mutual inductance
+    mfull = find_mutual_inductance(mfull)
+    #then, reduce the mutual inductance array again
+    mm = make_reduced_matrix(mm, mfull)
+    #now, finally, the first new simulation step, compute the currents
+    #
+///
+}}}
+
+{{{id=22|
+mm
 ///
 array([[  1.07314394e+02,   2.78989073e+01,   2.36848067e+01,
           2.06557685e+01,   3.00000000e+06,   4.00000000e+06,
@@ -372,21 +419,33 @@ array([[  1.07314394e+02,   2.78989073e+01,   2.36848067e+01,
           3.41443527e-05]])
 }}}
 
-{{{id=13|
-#The simulation code lives in this cell
-for kk in range(0,ntim):
-    #if the counter has advanced beyond nchange, then make the time step larger
-    if cntr >= nchange:
-        dt = ddt*10
-    time = time + dt
-    #store the current time in microseconds
-    ptime[cntr] = time*1e3
-    
-    #now, find the mutual inductance
-    #
-    #then, reduce the mutual inductance array again
-    #
-    #now, finally, the first new simulation step, compute the currents
-    #
+{{{id=21|
+mfull[2:9, 2:9]
+///
+array([[  3.41443527e-05,   1.95128445e-05,   1.51936075e-05,
+          1.27052998e-05,   1.09795070e-05,   9.67626152e-06,
+          8.64261251e-06],
+       [  1.95128445e-05,   3.41443527e-05,   1.95128445e-05,
+          1.51936075e-05,   1.27052998e-05,   1.09795070e-05,
+          9.67626152e-06],
+       [  1.51936075e-05,   1.95128445e-05,   3.41443527e-05,
+          1.95128445e-05,   1.51936075e-05,   1.27052998e-05,
+          1.09795070e-05],
+       [  1.27052998e-05,   1.51936075e-05,   1.95128445e-05,
+          3.41443527e-05,   1.95128445e-05,   1.51936075e-05,
+          1.27052998e-05],
+       [  1.09795070e-05,   1.27052998e-05,   1.51936075e-05,
+          1.95128445e-05,   3.41443527e-05,   1.95128445e-05,
+          1.51936075e-05],
+       [  9.67626152e-06,   1.09795070e-05,   1.27052998e-05,
+          1.51936075e-05,   1.95128445e-05,   3.41443527e-05,
+          1.95128445e-05],
+       [  8.64261251e-06,   9.67626152e-06,   1.09795070e-05,
+          1.27052998e-05,   1.51936075e-05,   1.95128445e-05,
+          3.41443527e-05]])
+}}}
+
+{{{id=23|
+
 ///
 }}}
