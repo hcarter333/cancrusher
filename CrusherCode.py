@@ -3,6 +3,8 @@
 import numpy as np
 from numpy.linalg import inv
 rstvty(temperature)=(4.5+1.133*10^-2*temperature)*10^-8
+#Returns the specific heat in J/Kg/K
+specheat(temperature) = 4.18*(0.16+1.5e-4*temperature)*1000.0    
 #setup the constants
 perm0 = 1.25663706*1e-6
 nmov = 6
@@ -68,6 +70,7 @@ work = numpy.array(range(ntim+1), dtype=float)
 enrgtot = numpy.array(range(ntim+1), dtype=float)
 ptime = numpy.array(range(ntim+1), dtype=float)
 denrg = 0.0
+dheat = 0.0
 
 dt = ddt
 time = 0.0
@@ -82,12 +85,19 @@ ntim1 = ntim-1
 t(rcoil, zc, rc) = (rc+rcoil)^2+zc^2
 argm(rcoil, zc, rc)= 4*rcoil*rc/t(rcoil,zc,rc)
 dbcoilflux(rcoil, zc, rc, curren) = (2*perm0/(2*pi))*curren*((rcoil*rc)/(argm(rcoil, zc, rc)/t(rcoil, zc, rc)^0.5))*((2-argm(rcoil, zc, rc))*elliptic_kc(argm(rcoil, zc, rc))-(2*elliptic_ec(argm(rcoil, zc, rc))))
+
+#here's the z direction magnetic field calculation from dbcoil
+#There are two versions, one for r = 0 and the other for r <> 0
+dbcoilbzrzero(rcoil, zc, rc, curren) = perm0*rcoil^2*curren/(2*(rcoil^2+zc^2)^(3/2))
+bzfac(rcoil, zc, rc) = ((rcoil^2-rc^2)-zc^2)/(((rcoil-rc)^2)+zc^2)
+dbcoilbz(rcoil, zc, rc, curren) = (bzfac(rcoil, zc, rc)*elliptic_ec(argm(rcoil, zc, rc))+elliptic_kc(argm(rcoil, zc, rc)))+((2*perm0/(2*pi))/(t(rcoil, zc, rc)^0.5))
 ///
 }}}
 
 {{{id=11|
-
+plot(dbcoilbzrzero(2, zc, 0.1, 1), 0, 5)
 ///
+<html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
 
 {{{id=2|
@@ -320,7 +330,7 @@ for jj in range(0, nfix):
 ///
 }}}
 
-{{{id=24|
+{{{id=26|
 #getting started on the compute_current function
 def compute_current():
     global qq
@@ -332,6 +342,8 @@ def compute_current():
     global zeroline
     global z
     global r
+    global dheat
+    global temp
     #first, we'll need some working arrays
     ccur = numpy.array(range(nmov+nfix), dtype=float)
     for i in range(0,nfix):
@@ -431,15 +443,37 @@ def compute_current():
         rso = r[j]
         curr = 1e3*ccur[j]
         #implement the portion of dbcoil that returns bz
-        
+        sbz = sbz + dbcoilbzrzero(rso, zz, rr, curr)
         #sbz = sbz + bz
         
+    #This is the field in kGauss
+    bzero[cntr] = 10*sbz
+    tms = 1e3*time
+    
+    #Calculate the heat
+    dheat = 0.0
+    for i in range(1, nmov+1):
+        tt=temp[i]
+        sig = specheat(tt)
+        enrg = cur[i]^2*res[i]*dt
+        dheat = dheat + enrg
+        dtemp = dheat/(sig*mass)
+        temp[i] = temp[i] + dtemp
+        tt = temp[i]
+        rho = rstvty(tt)
+        #Cool!  Updating the resistance based on the temperature change
+        #in the can
+        res[i] = 1e3*rho*2*pi*rcan/(thickness*delta)
+        
+        
+    
+    
     #testing
     return cur
 ///
 }}}
 
-{{{id=14|
+{{{id=25|
 #now, let's test the above code by calling it at least
 #now, find the mutual inductance
 global mfull
@@ -452,11 +486,12 @@ my_current = compute_current()
 }}}
 
 {{{id=19|
+#Interestingly, the current is already progression on each move through
 my_current
 ///
-array([ -7.34696796e-09,   2.38495513e-03,   1.02871591e-03,
-         7.62842744e-04,   7.62842744e-04,   1.02871591e-03,
-         2.38495513e-03])
+array([  7.89928134e-08,   6.60985381e-02,  -3.09111682e-02,
+        -2.55996952e-02,  -2.55996952e-02,  -3.09111682e-02,
+         6.60985381e-02])
 }}}
 
 {{{id=20|
