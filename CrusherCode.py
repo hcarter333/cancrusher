@@ -29,6 +29,10 @@ dr = numpy.array([1.33E-3, 1.33E-3, 1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33
 delta = abs(z[nmov+1] - z[nmov+2])
 
 #Here are two more arrays that are used, but I'm not sure what for yet
+#vr is the radial velocity of the can?  For some reason it included enough entries 
+#for the can and the fixed coil
+#vz is the z velocity, but it looks unused.  It looks like the axial force 
+#implementation was left incomplete in the initial version
 vr = numpy.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], dtype=float)
 vz = numpy.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], dtype=float)
 
@@ -46,13 +50,16 @@ temp = numpy.array([293.0, 293.0, 293.0, 293.0, 293.0, 293.0, 293.0], dtype=floa
 #I need todo check on this
 res = numpy.array([8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
 
-cap = numpy.array([0.00005, -1, -1, -1, -1, -1, -1], dtype=float)
+#Just changed the capacitance to 500 from 50
+cap = numpy.array([0.0005, -1, -1, -1, -1, -1, -1], dtype=float)
 
 lckt = numpy.array([0.05, 0, 0, 0, 0, 0, 0], dtype=float)
 
 cur = numpy.array([0.0, 0, 0, 0, 0, 0, 0], dtype=float)
+ccur = numpy.array(range(nmov+nfix), dtype=float)
 
-V0 = numpy.array([5000.0, 0, 0, 0, 0, 0, 0], dtype=float)
+#Changed to 3000 from 5000
+V0 = numpy.array([3000.0, 0, 0, 0, 0, 0, 0], dtype=float)
 
 #setup the admittance matrix.  I've made this a single statement here, keep in mind that 
 #there's a there is a loop treatment in the original code
@@ -257,7 +264,7 @@ plot(dbcoilflux(2, 0, rc, 1), 0.01, 2)
 <html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
 
-{{{id=26|
+{{{id=37|
 import numpy as np
 #getting started on the compute_current function
 def compute_current():
@@ -273,8 +280,8 @@ def compute_current():
     global dheat
     global temp
     global ptime
+    global ccur
     #first, we'll need some working arrays
-    ccur = numpy.array(range(nmov+nfix), dtype=float)
     for i in range(0,nfix):
         ccur[i] = cur[0]
     for i in range(nfix,nfix+nmov):
@@ -422,11 +429,60 @@ def compute_current():
 ///
 }}}
 
+{{{id=26|
+#This is the move_can function
+#It returns the radial velocity of the can
+
+def move_can():
+    global z
+    global ccur
+    global dt
+    
+    brg = numpy.array(range(nfix + nmov), dtype=float)
+    bzt = numpy.array(range(nfix + nmov), dtype=float)
+    
+    for i in range(1,nmov+1):
+        sbz = 0.0
+        imov = nfix + i - 1
+        for j in range(0,nfix+nmov):
+            if j==imov:
+                 break
+            zz = z[imov]-z[j]
+            rr = r[imov]
+            rso = r[j]
+            curr = 1e3*ccur[j]
+            if rr == 0:
+                sbz = sbz + dbcoilbzrzero(rso, zz, rr, curr)
+            else:
+                sbz = sbz + dbcoilbz(rso, zz, rr, curr)
+                
+        bzt[i+nfix-1] = sbz
+    dwork = 0.0
+    for i in range(1,nmov/2):
+        ii=nfix+i-1
+        iii = nfix + nmov - i
+        #Find force in kNewtons
+        forcer = bzt[ii]*ccur[ii]*2*pi*r[ii]
+        #Get the differential in velocity from the force and mass
+        dvr = forcer*dt/mass
+        vrnew = vr[ii]+dvr
+        #get the new r position using the velocity
+        rnew=r[ii]+vr[ii]*1e-3*dt
+        #Find work in Joules
+        dwork=dwork+2*forcer*vrnew*dt
+        vr[ii]=vrnew
+        r[ii] = rnew
+        vr[iii]=vrnew
+        r[iii]=rnew
+        return vr[5]
+///
+}}}
+
 {{{id=13|
 #The simulation code lives in this cell
 #currently, the full time range takes a while with ntim
 #for kk in range(0,ntim):
-for kk in range(0,600):
+for kk in range(0,9):
     #if the counter has advanced beyond nchange, then make the time step larger
     if cntr >= nchange:
         dt = ddt*10
@@ -446,134 +502,26 @@ for kk in range(0,600):
     mm = make_reduced_matrix(mm, mfull)
     #now, finally, the first new simulation step, compute the currents
     compute_current()
+    move_can()
 ///
-WARNING: Output truncated!  
-<html><a target='_new' href='/home/admin/4/cells/13/full_output.txt' class='file_link'>full_output.txt</a></html>
-
-
-
 0
+0.5
 1
+0.5
 2
+0.5
 3
+0.5
 4
+0.5
 5
+0.5
 6
+0.5
 7
+0.5
 8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46
-47
-48
-49
-50
-51
-52
-53
-54
-55
-56
-57
-58
-
-...
-
-540
-541
-542
-543
-544
-545
-546
-547
-548
-549
-550
-551
-552
-553
-554
-555
-556
-557
-558
-559
-560
-561
-562
-563
-564
-565
-566
-567
-568
-569
-570
-571
-572
-573
-574
-575
-576
-577
-578
-579
-580
-581
-582
-583
-584
-585
-586
-587
-588
-589
-590
-591
-592
-593
-594
-595
-596
-597
-598
-599
+0.5
 }}}
 
 {{{id=35|
