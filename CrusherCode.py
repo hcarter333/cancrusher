@@ -258,14 +258,9 @@ plot(dbcoilflux(2, 0, rc, 1), 2, 5)
 <html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
 
-{{{id=15|
+{{{id=39|
 #and inside the coil, being careful to avoid the point r = 0
 plot(dbcoilflux(2, 0, rc, 1), 0.01, 2)
-///
-<html><font color='black'><img src='cell://sage0.png'></font></html>
-}}}
-
-{{{id=37|
 import numpy as np
 #getting started on the compute_current function
 def compute_current():
@@ -453,14 +448,17 @@ def move_can():
             rr = r[imov]
             rso = r[j]
             curr = 1e3*ccur[j]
-            if rr == 0:
-                sbz = sbz + dbcoilbzrzero(rso, zz, rr, curr)
-            else:
-                sbz = sbz + dbcoilbz(rso, zz, rr, curr)
+            #if rr is zero, the can has broken in half and all bets are off anyway           
+            #if rr == 0:
+            #    sbz = sbz + dbcoilbzrzero(rso, zz, rr, curr)
+            #else:
+            sbz = sbz + dbcoilbz(rso, zz, rr, curr)
                 
         bzt[i+nfix-1] = sbz
     dwork = 0.0
     for i in range(1,(nmov/2)+1):
+        #This looks like we're hitting opposite edges of the moving coils, the can, and 
+        #working towards the center
         ii=nfix+i-1
         iii = nfix + nmov - i
         #Find force in kNewtons
@@ -484,7 +482,7 @@ def move_can():
 #The simulation code lives in this cell
 #currently, the full time range takes a while with ntim
 #for kk in range(0,ntim):
-for kk in range(0,600):
+for kk in range(0,599):
     #if the counter has advanced beyond nchange, then make the time step larger
     if cntr >= nchange:
         dt = ddt*10
@@ -504,7 +502,7 @@ for kk in range(0,600):
     mm = make_reduced_matrix(mm, mfull)
     #now, finally, the first new simulation step, compute the currents
     compute_current()
-    move_can()
+    #move_can()
     
     #track the heat and work for this step
     heatenrg[cntr]=heatenrg[cntr+1]+dheat
@@ -521,127 +519,127 @@ WARNING: Output truncated!
 
 
 0
-0.5
 1
-0.5
 2
-0.5
 3
-0.5
 4
-0.5
 5
-0.5
 6
-0.5
 7
-0.5
 8
-0.5
 9
-0.5
 10
-0.5
 11
-0.5
 12
-0.5
 13
-0.5
 14
-0.5
 15
-0.5
 16
-0.5
 17
-0.5
 18
-0.5
 19
-0.5
 20
-0.5
 21
-0.5
 22
-0.5
 23
-0.5
 24
-0.5
 25
-0.5
 26
-0.5
 27
-0.5
 28
-0.5
 29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
 
 ...
 
-186
-0.5
-187
-0.5
-188
-0.5
-189
-0.5
-190
-0.5
-191
-0.5
-192
-0.5
-193
-0.5
-194
-0.5
-195
-0.5
-196
-0.5
-197
-0.5
-198
-0.5
-199
-0.5
-200
-0.5
-201
-0.5
-202
-0.5
-203
-0.5
-204
-0.5
-205
-0.5
-206
-0.5
-207
-0.5
-208
-0.5
-209
-0.5
-210
+548
+549
+550
+551
+552
+553
+554
+555
+556
+557
+558
+559
+560
+561
+562
+563
+564
+565
+566
+567
+568
+569
+570
+571
+572
+573
+574
+575
+576
+577
+578
+579
+580
+581
+582
+583
+584
+585
+586
+587
+588
+589
+590
+591
+592
+593
+594
+595
+596
+597
+598
+599
 Traceback (most recent call last):            dt = ddt*10
   File "", line 1, in <module>
     
-  File "/tmp/tmp9eptFt/___code___.py", line 5, in <module>
-    exec compile(u"for kk in range(_sage_const_0 ,_sage_const_600 ):\n    #if the counter has advanced beyond nchange, then make the time step larger\n    if cntr >= nchange:\n        dt = ddt*_sage_const_10 \n    print cntr\n    cntr = cntr + _sage_const_1 \n    time = time + dt\n    #store the current time in microseconds\n    ptime[cntr] = time*_sage_const_1e3 \n    \n    #Even those these funcitons have been called in initialize, it's important to call them even on \n    #the first loop through here.  Otherwise, mmold winds up with junk in it.\n    #now, find the mutual inductance\n    global mfull\n    mfull = find_mutual_inductance(mfull)\n    #then, reduce the mutual inductance array again\n    global mm\n    mm = make_reduced_matrix(mm, mfull)\n    #now, finally, the first new simulation step, compute the currents\n    compute_current()\n    move_can()\n    \n    #track the heat and work for this step\n    heatenrg[cntr]=heatenrg[cntr+_sage_const_1 ]+dheat\n    work[cntr]=work[cntr-_sage_const_1 ]+dwork\n    enrgtot[cntr]=enrgtot[cntr-_sage_const_1 ]+denrg\n    for jj in range(_sage_const_0 ,nmov):\n        jjmov = jj + nfix\n        rstor[jj,kk+_sage_const_1 ] = r[jjmov]\n        zstor[jj,kk+_sage_const_1 ] = z[jjmov]" + '\n', '', 'single')
-  File "", line 15, in <module>
+  File "/tmp/tmpgu_TF5/___code___.py", line 5, in <module>
+    exec compile(u"for kk in range(_sage_const_0 ,_sage_const_600 ):\n    #if the counter has advanced beyond nchange, then make the time step larger\n    if cntr >= nchange:\n        dt = ddt*_sage_const_10 \n    print cntr\n    cntr = cntr + _sage_const_1 \n    time = time + dt\n    #store the current time in microseconds\n    ptime[cntr] = time*_sage_const_1e3 \n    \n    #Even those these funcitons have been called in initialize, it's important to call them even on \n    #the first loop through here.  Otherwise, mmold winds up with junk in it.\n    #now, find the mutual inductance\n    global mfull\n    mfull = find_mutual_inductance(mfull)\n    #then, reduce the mutual inductance array again\n    global mm\n    mm = make_reduced_matrix(mm, mfull)\n    #now, finally, the first new simulation step, compute the currents\n    compute_current()\n    #move_can()\n    \n    #track the heat and work for this step\n    heatenrg[cntr]=heatenrg[cntr+_sage_const_1 ]+dheat\n    work[cntr]=work[cntr-_sage_const_1 ]+dwork\n    enrgtot[cntr]=enrgtot[cntr-_sage_const_1 ]+denrg\n    for jj in range(_sage_const_0 ,nmov):\n        jjmov = jj + nfix\n        rstor[jj,kk+_sage_const_1 ] = r[jjmov]\n        zstor[jj,kk+_sage_const_1 ] = z[jjmov]" + '\n', '', 'single')
+  File "", line 24, in <module>
     
-  File "/tmp/tmp34pSfa/___code___.py", line 140, in find_mutual_inductance
-    mfullarray[i,j] = dbcoilflux(r[i], z[j]-z[i], r[j]-dr[j], _sage_const_1 )
-  File "expression.pyx", line 1178, in sage.symbolic.expression.Expression.__float__ (sage/symbolic/expression.cpp:8057)
-TypeError: unable to simplify to float approximation
+IndexError: index 601 is out of bounds for axis 0 with size 601
 }}}
 
 {{{id=38|
@@ -659,6 +657,13 @@ list_plot(coilOutTime[0:599, 0:2])
 }}}
 
 {{{id=36|
+r
+///
+array([ 0.0343,  0.0343,  0.0343,  0.0312,  0.0312,  0.0312,  0.0312,
+        0.0312,  0.0312])
+}}}
+
+{{{id=40|
 
 ///
 }}}
