@@ -104,6 +104,7 @@ enrgtot = numpy.array(range(ntim+1), dtype=float)
 ptime = numpy.array(range(ntim+1), dtype=float)
 denrg = 0.0
 dheat = 0.0
+dwork = 0.0
 
 dt = ddt
 time = 0.0
@@ -437,6 +438,7 @@ def move_can():
     global z
     global ccur
     global dt
+    global dwork
     
     brg = numpy.array(range(nfix + nmov), dtype=float)
     bzt = numpy.array(range(nfix + nmov), dtype=float)
@@ -458,7 +460,7 @@ def move_can():
                 
         bzt[i+nfix-1] = sbz
     dwork = 0.0
-    for i in range(1,nmov/2):
+    for i in range(1,(nmov/2)+1):
         ii=nfix+i-1
         iii = nfix + nmov - i
         #Find force in kNewtons
@@ -482,7 +484,7 @@ def move_can():
 #The simulation code lives in this cell
 #currently, the full time range takes a while with ntim
 #for kk in range(0,ntim):
-for kk in range(0,9):
+for kk in range(0,600):
     #if the counter has advanced beyond nchange, then make the time step larger
     if cntr >= nchange:
         dt = ddt*10
@@ -503,7 +505,21 @@ for kk in range(0,9):
     #now, finally, the first new simulation step, compute the currents
     compute_current()
     move_can()
+    
+    #track the heat and work for this step
+    heatenrg[cntr]=heatenrg[cntr+1]+dheat
+    work[cntr]=work[cntr-1]+dwork
+    enrgtot[cntr]=enrgtot[cntr-1]+denrg
+    for jj in range(0,nmov):
+        jjmov = jj + nfix
+        rstor[jj,kk+1] = r[jjmov]
+        zstor[jj,kk+1] = z[jjmov]
 ///
+WARNING: Output truncated!  
+<html><a target='_new' href='/home/admin/4/cells/13/full_output.txt' class='file_link'>full_output.txt</a></html>
+
+
+
 0
 0.5
 1
@@ -522,6 +538,118 @@ for kk in range(0,9):
 0.5
 8
 0.5
+9
+0.5
+10
+0.5
+11
+0.5
+12
+0.5
+13
+0.5
+14
+0.5
+15
+0.5
+16
+0.5
+17
+0.5
+18
+0.5
+19
+0.5
+20
+0.5
+21
+0.5
+22
+0.5
+23
+0.5
+24
+0.5
+25
+0.5
+26
+0.5
+27
+0.5
+28
+0.5
+29
+
+...
+
+186
+0.5
+187
+0.5
+188
+0.5
+189
+0.5
+190
+0.5
+191
+0.5
+192
+0.5
+193
+0.5
+194
+0.5
+195
+0.5
+196
+0.5
+197
+0.5
+198
+0.5
+199
+0.5
+200
+0.5
+201
+0.5
+202
+0.5
+203
+0.5
+204
+0.5
+205
+0.5
+206
+0.5
+207
+0.5
+208
+0.5
+209
+0.5
+210
+Traceback (most recent call last):            dt = ddt*10
+  File "", line 1, in <module>
+    
+  File "/tmp/tmp9eptFt/___code___.py", line 5, in <module>
+    exec compile(u"for kk in range(_sage_const_0 ,_sage_const_600 ):\n    #if the counter has advanced beyond nchange, then make the time step larger\n    if cntr >= nchange:\n        dt = ddt*_sage_const_10 \n    print cntr\n    cntr = cntr + _sage_const_1 \n    time = time + dt\n    #store the current time in microseconds\n    ptime[cntr] = time*_sage_const_1e3 \n    \n    #Even those these funcitons have been called in initialize, it's important to call them even on \n    #the first loop through here.  Otherwise, mmold winds up with junk in it.\n    #now, find the mutual inductance\n    global mfull\n    mfull = find_mutual_inductance(mfull)\n    #then, reduce the mutual inductance array again\n    global mm\n    mm = make_reduced_matrix(mm, mfull)\n    #now, finally, the first new simulation step, compute the currents\n    compute_current()\n    move_can()\n    \n    #track the heat and work for this step\n    heatenrg[cntr]=heatenrg[cntr+_sage_const_1 ]+dheat\n    work[cntr]=work[cntr-_sage_const_1 ]+dwork\n    enrgtot[cntr]=enrgtot[cntr-_sage_const_1 ]+denrg\n    for jj in range(_sage_const_0 ,nmov):\n        jjmov = jj + nfix\n        rstor[jj,kk+_sage_const_1 ] = r[jjmov]\n        zstor[jj,kk+_sage_const_1 ] = z[jjmov]" + '\n', '', 'single')
+  File "", line 15, in <module>
+    
+  File "/tmp/tmp34pSfa/___code___.py", line 140, in find_mutual_inductance
+    mfullarray[i,j] = dbcoilflux(r[i], z[j]-z[i], r[j]-dr[j], _sage_const_1 )
+  File "expression.pyx", line 1178, in sage.symbolic.expression.Expression.__float__ (sage/symbolic/expression.cpp:8057)
+TypeError: unable to simplify to float approximation
+}}}
+
+{{{id=38|
+r
+///
+array([  3.43000000e-02,   3.43000000e-02,   3.43000000e-02,
+        -2.75897764e+18,   3.12000000e-02,   3.12000000e-02,
+         3.12000000e-02,   3.12000000e-02,  -2.75897764e+18])
 }}}
 
 {{{id=35|
