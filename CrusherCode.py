@@ -33,7 +33,7 @@ delta = abs(z[nmov+1] - z[nmov+2])
 #for the can and the fixed coil
 #vz is the z velocity, but it looks unused.  It looks like the axial force 
 #implementation was left incomplete in the initial version
-vr = numpy.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], dtype=float)
+vr = numpy.array([0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
 vz = numpy.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], dtype=float)
 
 #NOTE:  r, z, and vr will all be modified by move can
@@ -51,7 +51,7 @@ temp = numpy.array([293.0, 293.0, 293.0, 293.0, 293.0, 293.0, 293.0], dtype=floa
 res = numpy.array([8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
 
 #Just changed the capacitance to 500 from 50
-cap = numpy.array([0.0005, -1, -1, -1, -1, -1, -1], dtype=float)
+cap = numpy.array([0.0004, -1, -1, -1, -1, -1, -1], dtype=float)
 
 lckt = numpy.array([0.05, 0, 0, 0, 0, 0, 0], dtype=float)
 
@@ -552,19 +552,19 @@ nmov
 rii
 0.0312
 vrii
-0.3
+0.0
 dt
 0.0000200000000000000
 rii
 0.0312
 vrii
-0.4
+0.0
 dt
 0.0000200000000000000
 rii
 0.0312
 vrii
-0.5
+0.0
 dt
 0.0000200000000000000
 1
@@ -573,21 +573,21 @@ Time in microseconds
 nmov
 6
 rii
-0.031200006
+0.0312
 vrii
-0.3
+0.0
 dt
 0.0000200000000000000
 rii
-0.031200008
+0.0312
 vrii
-0.4
+0.0
 dt
 0.0000200000000000000
 rii
-0.03120001
+0.0312
 vrii
-0.5
+0.0
 dt
 0.0000200000000000000
 2
@@ -596,57 +596,57 @@ Time in microseconds
 nmov
 6
 rii
-0.031200012
+0.0312
 vrii
-0.29996002604
+-3.99739763824e-05
 dt
 0.0000200000000000000
 rii
-0.031200016
+0.0312
 
 ...
 
--33675.5333951
+-1997.16116142
 dt
 0.000200000000000000
 rii
-0.000740212325234
+0.000699493405975
 vrii
--3189717.40105
+-223576.000204
 dt
 0.000200000000000000
-367
+373
 Time in microseconds
-70.0
+71.2
 nmov
 6
 rii
-0.0140248435912
+0.0148691353609
 vrii
--1.23570418117e+19
+-7.16298924633e+15
 dt
 0.000200000000000000
 rii
--0.000221227583424
+0.00631338234694
 vrii
--3.10283778144e+20
+-1.42076942567e+17
 dt
 0.000200000000000000
 rii
--0.637203267885
+-0.0440157066348
 vrii
--2.97154711146e+22
+-1.67240907326e+19
 dt
 0.000200000000000000
-368
+374
 Traceback (most recent call last):            dt = ddt*10
   File "", line 1, in <module>
     
-  File "/tmp/tmpGBU5cS/___code___.py", line 5, in <module>
+  File "/tmp/tmpNWTLGS/___code___.py", line 5, in <module>
     exec compile(u'for kk in range(_sage_const_0 ,_sage_const_599 ):\n    #if the counter has advanced beyond nchange, then make the time step larger\n    if cntr >= nchange:\n        dt = ddt*_sage_const_10 \n    print cntr\n    cntr = cntr + _sage_const_1 \n    time = time + dt\n    #store the current time in microseconds\n    ptime[cntr] = time*_sage_const_1e3 \n    \n    #Even those these funcitons have been called in initialize, it\'s important to call them even on \n    #the first loop through here.  Otherwise, mmold winds up with junk in it.\n    #now, find the mutual inductance\n    global mfull\n    mfull = find_mutual_inductance(mfull)\n    #then, reduce the mutual inductance array again\n    global mm\n    mm = make_reduced_matrix(mm, mfull)\n    #now, finally, the first new simulation step, compute the currents\n    print "Time in microseconds"\n    print ptime[cntr]\n    compute_current()\n    move_can()\n    \n    #track the heat and work for this step\n    heatenrg[cntr]=heatenrg[cntr+_sage_const_1 ]+dheat\n    work[cntr]=work[cntr-_sage_const_1 ]+dwork\n    enrgtot[cntr]=enrgtot[cntr-_sage_const_1 ]+denrg\n    for jj in range(_sage_const_0 ,nmov):\n        jjmov = jj + nfix\n        rstor[jj,kk+_sage_const_1 ] = r[jjmov]\n        zstor[jj,kk+_sage_const_1 ] = z[jjmov]' + '\n', '', 'single')
   File "", line 15, in <module>
     
-  File "/tmp/tmpltno8K/___code___.py", line 144, in find_mutual_inductance
+  File "/tmp/tmp6wiGR3/___code___.py", line 144, in find_mutual_inductance
     mfullarray[i,j] = dbcoilflux(r[i], z[j]-z[i], r[j]-dr[j], _sage_const_1 )
   File "expression.pyx", line 4361, in sage.symbolic.expression.Expression.__call__ (sage/symbolic/expression.cpp:21618)
   File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/symbolic/callable.py", line 477, in _call_element_
@@ -677,7 +677,7 @@ array([  3.43000000e-02,   3.43000000e-02,   3.43000000e-02,
 }}}
 
 {{{id=35|
-list_plot(coilOutTime[0:365, 0:2])
+list_plot(coilOutTime[0:372, 0:2])
 ///
 <html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
@@ -704,7 +704,7 @@ array([ 0.03120001,  0.03120001,  0.03120001,  0.03120001,  0.03120001,
 }}}
 
 {{{id=42|
-show(list_plot(rstor[0:nmov, 1], plotjoined=True) + list_plot(rstor[0:nmov, 77], plotjoined=True) + list_plot(rstor[0:nmov, 138], plotjoined=True) + list_plot(rstor[0:nmov, 198], plotjoined=True) + list_plot(rstor[0:nmov, 258], plotjoined=True) + list_plot(rstor[0:nmov, 318], plotjoined=True))
+show(list_plot(rstor[0:nmov, 1], plotjoined=True) + list_plot(rstor[0:nmov, 77], plotjoined=True) + list_plot(rstor[0:nmov, 138], plotjoined=True) + list_plot(rstor[0:nmov, 198], plotjoined=True) + list_plot(rstor[0:nmov, 258], plotjoined=True) + list_plot(rstor[0:nmov, 318], plotjoined=True) + list_plot(rstor[0:nmov, 372], plotjoined=True))
 ///
 <html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
