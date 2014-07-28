@@ -126,7 +126,9 @@ dbcoilflux(rcoil, zc, rc, curren) = (((2*perm0*curren*rcoil*rc)/argm(rcoil, zc, 
 #There are two versions, one for r = 0 and the other for r <> 0
 dbcoilbzrzero(rcoil, zc, rc, curren) = perm0*rcoil^2*curren/(2*(rcoil^2+zc^2)^(3/2))
 bzfac(rcoil, zc, rc) = ((rcoil^2-rc^2)-zc^2)/(((rcoil-rc)^2)+zc^2)
-dbcoilbz(rcoil, zc, rc, curren) = (bzfac(rcoil, zc, rc)*elliptic_ec(argm(rcoil, zc, rc))+elliptic_kc(argm(rcoil, zc, rc)))+((2*perm0/(2*pi))/(t(rcoil, zc, rc)^0.5))
+#this was missing the curren term next to perm0
+#Also, the term containing perm0 was supposed to be multiplied, not added
+dbcoilbz(rcoil, zc, rc, curren) = (bzfac(rcoil, zc, rc)*elliptic_ec(argm(rcoil, zc, rc))+elliptic_kc(argm(rcoil, zc, rc)))*((2*perm0*curren/(2*pi))/(t(rcoil, zc, rc)^0.5))
 
 #now take mfull created above and use it to generate the reduced mutual induction matrix mm
 #mm is dimensioned for only the moving coils plus one extra row and column
@@ -496,8 +498,6 @@ def move_can():
         r[ii] = rnew
         vr[iii]=vrnew
         r[iii]=rnew
-        #Here's the bug!
-        #return vr[5]
     #print "completed loop"
 ///
 }}}
@@ -598,7 +598,7 @@ nmov
 rii
 0.031200012
 vrii
-0.28889119054
+0.29996002604
 dt
 0.0000200000000000000
 rii
@@ -606,47 +606,47 @@ rii
 
 ...
 
-62238871.3122
+-33675.5333951
 dt
 0.000200000000000000
 rii
--0.00182629643608
+0.000740212325234
 vrii
-730273930.106
+-3189717.40105
 dt
 0.000200000000000000
-121
+367
 Time in microseconds
-20.8
+70.0
 nmov
 6
 rii
-0.576843151107
+0.0140248435912
 vrii
--2.04610738021e+26
+-1.23570418117e+19
 dt
 0.000200000000000000
 rii
-12.4503883607
+-0.000221227583424
 vrii
-1.49872596098e+26
+-3.10283778144e+20
 dt
 0.000200000000000000
 rii
-146.052959725
+-0.637203267885
 vrii
--8.27020826272e+27
+-2.97154711146e+22
 dt
 0.000200000000000000
-122
+368
 Traceback (most recent call last):            dt = ddt*10
   File "", line 1, in <module>
     
-  File "/tmp/tmpHq3Shv/___code___.py", line 5, in <module>
+  File "/tmp/tmpGBU5cS/___code___.py", line 5, in <module>
     exec compile(u'for kk in range(_sage_const_0 ,_sage_const_599 ):\n    #if the counter has advanced beyond nchange, then make the time step larger\n    if cntr >= nchange:\n        dt = ddt*_sage_const_10 \n    print cntr\n    cntr = cntr + _sage_const_1 \n    time = time + dt\n    #store the current time in microseconds\n    ptime[cntr] = time*_sage_const_1e3 \n    \n    #Even those these funcitons have been called in initialize, it\'s important to call them even on \n    #the first loop through here.  Otherwise, mmold winds up with junk in it.\n    #now, find the mutual inductance\n    global mfull\n    mfull = find_mutual_inductance(mfull)\n    #then, reduce the mutual inductance array again\n    global mm\n    mm = make_reduced_matrix(mm, mfull)\n    #now, finally, the first new simulation step, compute the currents\n    print "Time in microseconds"\n    print ptime[cntr]\n    compute_current()\n    move_can()\n    \n    #track the heat and work for this step\n    heatenrg[cntr]=heatenrg[cntr+_sage_const_1 ]+dheat\n    work[cntr]=work[cntr-_sage_const_1 ]+dwork\n    enrgtot[cntr]=enrgtot[cntr-_sage_const_1 ]+denrg\n    for jj in range(_sage_const_0 ,nmov):\n        jjmov = jj + nfix\n        rstor[jj,kk+_sage_const_1 ] = r[jjmov]\n        zstor[jj,kk+_sage_const_1 ] = z[jjmov]' + '\n', '', 'single')
   File "", line 15, in <module>
     
-  File "/tmp/tmpBrGlMQ/___code___.py", line 142, in find_mutual_inductance
+  File "/tmp/tmpltno8K/___code___.py", line 144, in find_mutual_inductance
     mfullarray[i,j] = dbcoilflux(r[i], z[j]-z[i], r[j]-dr[j], _sage_const_1 )
   File "expression.pyx", line 4361, in sage.symbolic.expression.Expression.__call__ (sage/symbolic/expression.cpp:21618)
   File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/symbolic/callable.py", line 477, in _call_element_
@@ -677,7 +677,7 @@ array([  3.43000000e-02,   3.43000000e-02,   3.43000000e-02,
 }}}
 
 {{{id=35|
-list_plot(coilOutTime[0:119, 0:2])
+list_plot(coilOutTime[0:365, 0:2])
 ///
 <html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
@@ -704,7 +704,7 @@ array([ 0.03120001,  0.03120001,  0.03120001,  0.03120001,  0.03120001,
 }}}
 
 {{{id=42|
-show(list_plot(rstor[0:nmov, 1], plotjoined=True) + list_plot(rstor[0:nmov, 79], plotjoined=True) + list_plot(rstor[0:nmov, 119], plotjoined=True))
+show(list_plot(rstor[0:nmov, 1], plotjoined=True) + list_plot(rstor[0:nmov, 77], plotjoined=True) + list_plot(rstor[0:nmov, 138], plotjoined=True) + list_plot(rstor[0:nmov, 198], plotjoined=True) + list_plot(rstor[0:nmov, 258], plotjoined=True) + list_plot(rstor[0:nmov, 318], plotjoined=True))
 ///
 <html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
@@ -785,24 +785,24 @@ array([  0.00000000e+00,   2.00000000e-02,   4.00000000e-02,
          1.92000000e+01,   1.94000000e+01,   1.96000000e+01,
          1.98000000e+01,   2.00000000e+01,   2.02000000e+01,
          2.04000000e+01,   2.06000000e+01,   2.08000000e+01,
-         2.10000000e+01,   1.24000000e+02,   1.25000000e+02,
-         1.26000000e+02,   1.27000000e+02,   1.28000000e+02,
-         1.29000000e+02,   1.30000000e+02,   1.31000000e+02,
-         1.32000000e+02,   1.33000000e+02,   1.34000000e+02,
-         1.35000000e+02,   1.36000000e+02,   1.37000000e+02,
-         1.38000000e+02,   1.39000000e+02,   1.40000000e+02,
-         1.41000000e+02,   1.42000000e+02,   1.43000000e+02,
-         1.44000000e+02,   1.45000000e+02,   1.46000000e+02,
-         1.47000000e+02,   1.48000000e+02,   1.49000000e+02,
-         1.50000000e+02,   1.51000000e+02,   1.52000000e+02,
-         1.53000000e+02,   1.54000000e+02,   1.55000000e+02,
-         1.56000000e+02,   1.57000000e+02,   1.58000000e+02,
-         1.59000000e+02,   1.60000000e+02,   1.61000000e+02,
-         1.62000000e+02,   1.63000000e+02,   1.64000000e+02,
-         1.65000000e+02,   1.66000000e+02,   1.67000000e+02,
-         1.68000000e+02,   1.69000000e+02,   1.70000000e+02,
-         1.71000000e+02,   1.72000000e+02,   1.73000000e+02,
-         1.74000000e+02,   1.75000000e+02,   1.76000000e+02,
+         2.10000000e+01,   2.12000000e+01,   2.14000000e+01,
+         2.16000000e+01,   2.18000000e+01,   2.20000000e+01,
+         2.22000000e+01,   2.24000000e+01,   2.26000000e+01,
+         2.28000000e+01,   2.30000000e+01,   2.32000000e+01,
+         2.34000000e+01,   2.36000000e+01,   2.38000000e+01,
+         2.40000000e+01,   2.42000000e+01,   2.44000000e+01,
+         2.46000000e+01,   2.48000000e+01,   2.50000000e+01,
+         2.52000000e+01,   2.54000000e+01,   2.56000000e+01,
+         2.58000000e+01,   2.60000000e+01,   2.62000000e+01,
+         2.64000000e+01,   2.66000000e+01,   2.68000000e+01,
+         2.70000000e+01,   2.72000000e+01,   2.74000000e+01,
+         2.76000000e+01,   2.78000000e+01,   2.80000000e+01,
+         2.82000000e+01,   2.84000000e+01,   2.86000000e+01,
+         2.88000000e+01,   2.90000000e+01,   2.92000000e+01,
+         2.94000000e+01,   2.96000000e+01,   2.98000000e+01,
+         3.00000000e+01,   3.02000000e+01,   3.04000000e+01,
+         3.06000000e+01,   3.08000000e+01,   3.10000000e+01,
+         3.12000000e+01,   3.14000000e+01,   3.16000000e+01,
 
 ...
 
@@ -869,6 +869,33 @@ array([  0.00000000e+00,   2.00000000e-02,   4.00000000e-02,
 }}}
 
 {{{id=50|
+numpy.where(ptime > 6.00000000e+01)
+///
+(array([319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331,
+       332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344,
+       345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357,
+       358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370,
+       371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383,
+       384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396,
+       397, 398, 399, 400, 401, 402, 403, 404, 405, 406, 407, 408, 409,
+       410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422,
+       423, 424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 434, 435,
+       436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448,
+       449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461,
+       462, 463, 464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474,
+       475, 476, 477, 478, 479, 480, 481, 482, 483, 484, 485, 486, 487,
+       488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500,
+       501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511, 512, 513,
+       514, 515, 516, 517, 518, 519, 520, 521, 522, 523, 524, 525, 526,
+       527, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 538, 539,
+       540, 541, 542, 543, 544, 545, 546, 547, 548, 549, 550, 551, 552,
+       553, 554, 555, 556, 557, 558, 559, 560, 561, 562, 563, 564, 565,
+       566, 567, 568, 569, 570, 571, 572, 573, 574, 575, 576, 577, 578,
+       579, 580, 581, 582, 583, 584, 585, 586, 587, 588, 589, 590, 591,
+       592, 593, 594, 595, 596, 597, 598, 599, 600]),)
+}}}
+
+{{{id=51|
 
 ///
 }}}
