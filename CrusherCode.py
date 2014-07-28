@@ -101,6 +101,8 @@ zeroline = numpy.array(range(ntim+1), dtype=float)
 heatenrg = numpy.array(range(ntim+1), dtype=float)
 work = numpy.array(range(ntim+1), dtype=float)
 enrgtot = numpy.array(range(ntim+1), dtype=float)
+
+#store the current time in microseconds
 ptime = numpy.array(range(ntim+1), dtype=float)
 denrg = 0.0
 dheat = 0.0
@@ -258,9 +260,14 @@ plot(dbcoilflux(2, 0, rc, 1), 2, 5)
 <html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
 
-{{{id=39|
+{{{id=49|
 #and inside the coil, being careful to avoid the point r = 0
 plot(dbcoilflux(2, 0, rc, 1), 0.01, 2)
+///
+<html><font color='black'><img src='cell://sage0.png'></font></html>
+}}}
+
+{{{id=39|
 import numpy as np
 #getting started on the compute_current function
 def compute_current():
@@ -431,6 +438,7 @@ def compute_current():
 
 def move_can():
     global z
+    global r
     global ccur
     global dt
     global dwork
@@ -456,25 +464,41 @@ def move_can():
                 
         bzt[i+nfix-1] = sbz
     dwork = 0.0
+    print "nmov"
+    print nmov
     for i in range(1,(nmov/2)+1):
         #This looks like we're hitting opposite edges of the moving coils, the can, and 
         #working towards the center
+        #print "i"
+        #print i
         ii=nfix+i-1
-        iii = nfix + nmov - i
+        iii = (nfix + nmov) - i
+        
         #Find force in kNewtons
         forcer = bzt[ii]*ccur[ii]*2*pi*r[ii]
+        
         #Get the differential in velocity from the force and mass
         dvr = forcer*dt/mass
         vrnew = vr[ii]+dvr
+        
         #get the new r position using the velocity
         rnew=r[ii]+vr[ii]*1e-3*dt
+        print "rii"
+        print r[ii]
+        print "vrii"
+        print vr[ii]
+        print"dt"
+        print dt
+        
         #Find work in Joules
         dwork=dwork+2*forcer*vrnew*dt
         vr[ii]=vrnew
         r[ii] = rnew
         vr[iii]=vrnew
         r[iii]=rnew
-        return vr[5]
+        #Here's the bug!
+        #return vr[5]
+    #print "completed loop"
 ///
 }}}
 
@@ -501,8 +525,10 @@ for kk in range(0,599):
     global mm
     mm = make_reduced_matrix(mm, mfull)
     #now, finally, the first new simulation step, compute the currents
+    print "Time in microseconds"
+    print ptime[cntr]
     compute_current()
-    #move_can()
+    move_can()
     
     #track the heat and work for this step
     heatenrg[cntr]=heatenrg[cntr+1]+dheat
@@ -519,139 +545,139 @@ WARNING: Output truncated!
 
 
 0
-1
-2
-3
-4
-5
+Time in microseconds
+0.02
+nmov
 6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46
-47
-48
-49
-50
-51
-52
-53
-54
-55
-56
-57
-58
+rii
+0.0312
+vrii
+0.3
+dt
+0.0000200000000000000
+rii
+0.0312
+vrii
+0.4
+dt
+0.0000200000000000000
+rii
+0.0312
+vrii
+0.5
+dt
+0.0000200000000000000
+1
+Time in microseconds
+0.04
+nmov
+6
+rii
+0.031200006
+vrii
+0.3
+dt
+0.0000200000000000000
+rii
+0.031200008
+vrii
+0.4
+dt
+0.0000200000000000000
+rii
+0.03120001
+vrii
+0.5
+dt
+0.0000200000000000000
+2
+Time in microseconds
+0.06
+nmov
+6
+rii
+0.031200012
+vrii
+0.28889119054
+dt
+0.0000200000000000000
+rii
+0.031200016
 
 ...
 
-548
-549
-550
-551
-552
-553
-554
-555
-556
-557
-558
-559
-560
-561
-562
-563
-564
-565
-566
-567
-568
-569
-570
-571
-572
-573
-574
-575
-576
-577
-578
-579
-580
-581
-582
-583
-584
-585
-586
-587
-588
-589
-590
-591
-592
-593
-594
-595
-596
-597
-598
-599
+62238871.3122
+dt
+0.000200000000000000
+rii
+-0.00182629643608
+vrii
+730273930.106
+dt
+0.000200000000000000
+121
+Time in microseconds
+20.8
+nmov
+6
+rii
+0.576843151107
+vrii
+-2.04610738021e+26
+dt
+0.000200000000000000
+rii
+12.4503883607
+vrii
+1.49872596098e+26
+dt
+0.000200000000000000
+rii
+146.052959725
+vrii
+-8.27020826272e+27
+dt
+0.000200000000000000
+122
 Traceback (most recent call last):            dt = ddt*10
   File "", line 1, in <module>
     
-  File "/tmp/tmpgu_TF5/___code___.py", line 5, in <module>
-    exec compile(u"for kk in range(_sage_const_0 ,_sage_const_600 ):\n    #if the counter has advanced beyond nchange, then make the time step larger\n    if cntr >= nchange:\n        dt = ddt*_sage_const_10 \n    print cntr\n    cntr = cntr + _sage_const_1 \n    time = time + dt\n    #store the current time in microseconds\n    ptime[cntr] = time*_sage_const_1e3 \n    \n    #Even those these funcitons have been called in initialize, it's important to call them even on \n    #the first loop through here.  Otherwise, mmold winds up with junk in it.\n    #now, find the mutual inductance\n    global mfull\n    mfull = find_mutual_inductance(mfull)\n    #then, reduce the mutual inductance array again\n    global mm\n    mm = make_reduced_matrix(mm, mfull)\n    #now, finally, the first new simulation step, compute the currents\n    compute_current()\n    #move_can()\n    \n    #track the heat and work for this step\n    heatenrg[cntr]=heatenrg[cntr+_sage_const_1 ]+dheat\n    work[cntr]=work[cntr-_sage_const_1 ]+dwork\n    enrgtot[cntr]=enrgtot[cntr-_sage_const_1 ]+denrg\n    for jj in range(_sage_const_0 ,nmov):\n        jjmov = jj + nfix\n        rstor[jj,kk+_sage_const_1 ] = r[jjmov]\n        zstor[jj,kk+_sage_const_1 ] = z[jjmov]" + '\n', '', 'single')
-  File "", line 24, in <module>
+  File "/tmp/tmpHq3Shv/___code___.py", line 5, in <module>
+    exec compile(u'for kk in range(_sage_const_0 ,_sage_const_599 ):\n    #if the counter has advanced beyond nchange, then make the time step larger\n    if cntr >= nchange:\n        dt = ddt*_sage_const_10 \n    print cntr\n    cntr = cntr + _sage_const_1 \n    time = time + dt\n    #store the current time in microseconds\n    ptime[cntr] = time*_sage_const_1e3 \n    \n    #Even those these funcitons have been called in initialize, it\'s important to call them even on \n    #the first loop through here.  Otherwise, mmold winds up with junk in it.\n    #now, find the mutual inductance\n    global mfull\n    mfull = find_mutual_inductance(mfull)\n    #then, reduce the mutual inductance array again\n    global mm\n    mm = make_reduced_matrix(mm, mfull)\n    #now, finally, the first new simulation step, compute the currents\n    print "Time in microseconds"\n    print ptime[cntr]\n    compute_current()\n    move_can()\n    \n    #track the heat and work for this step\n    heatenrg[cntr]=heatenrg[cntr+_sage_const_1 ]+dheat\n    work[cntr]=work[cntr-_sage_const_1 ]+dwork\n    enrgtot[cntr]=enrgtot[cntr-_sage_const_1 ]+denrg\n    for jj in range(_sage_const_0 ,nmov):\n        jjmov = jj + nfix\n        rstor[jj,kk+_sage_const_1 ] = r[jjmov]\n        zstor[jj,kk+_sage_const_1 ] = z[jjmov]' + '\n', '', 'single')
+  File "", line 15, in <module>
     
-IndexError: index 601 is out of bounds for axis 0 with size 601
+  File "/tmp/tmpBrGlMQ/___code___.py", line 142, in find_mutual_inductance
+    mfullarray[i,j] = dbcoilflux(r[i], z[j]-z[i], r[j]-dr[j], _sage_const_1 )
+  File "expression.pyx", line 4361, in sage.symbolic.expression.Expression.__call__ (sage/symbolic/expression.cpp:21618)
+  File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/symbolic/callable.py", line 477, in _call_element_
+    return SR(_the_element.substitute(**d))
+  File "expression.pyx", line 4212, in sage.symbolic.expression.Expression.substitute (sage/symbolic/expression.cpp:20868)
+  File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/functions/special.py", line 505, in _eval_
+    if self.name() in repr(s):
+  File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/interfaces/maxima_abstract.py", line 1427, in __repr__
+    r = P.get(self._name)
+  File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/interfaces/maxima_lib.py", line 525, in get
+    s = self.eval('%s;'%var)
+  File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/interfaces/maxima_lib.py", line 423, in _eval_line
+    if statement: result = ((result + '\n') if result else '') + max_to_string(maxima_eval("#$%s$"%statement))
+  File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/interfaces/maxima_lib.py", line 260, in max_to_string
+    return maxprint(s).python()[1:-1]
+  File "ecl.pyx", line 784, in sage.libs.ecl.EclObject.__call__ (sage/libs/ecl.c:6640)
+  File "ecl.pyx", line 355, in sage.libs.ecl.ecl_safe_apply (sage/libs/ecl.c:4528)
+  File "c_lib.pyx", line 89, in sage.ext.c_lib.sig_raise_exception (sage/ext/c_lib.c:1094)
+FloatingPointError: Floating point exception
 }}}
 
 {{{id=38|
 r
 ///
 array([  3.43000000e-02,   3.43000000e-02,   3.43000000e-02,
-        -2.75897764e+18,   3.12000000e-02,   3.12000000e-02,
-         3.12000000e-02,   3.12000000e-02,  -2.75897764e+18])
+        -4.09642510e+19,   3.00055899e+19,  -1.65575866e+21,
+        -1.65575866e+21,   3.00055899e+19,  -4.09642510e+19])
 }}}
 
 {{{id=35|
-list_plot(coilOutTime[0:599, 0:2])
+list_plot(coilOutTime[0:119, 0:2])
 ///
 <html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
@@ -659,11 +685,190 @@ list_plot(coilOutTime[0:599, 0:2])
 {{{id=36|
 r
 ///
-array([ 0.0343,  0.0343,  0.0343,  0.0312,  0.0312,  0.0312,  0.0312,
-        0.0312,  0.0312])
+array([  3.43000000e-02,   3.43000000e-02,   3.43000000e-02,
+        -4.09221476e+19,   2.99745192e+19,  -1.65404165e+21,
+        -1.65404165e+21,   2.99745192e+19,  -4.09221476e+19])
 }}}
 
 {{{id=40|
+rstor[nfix, 1]
+///
+0.03120001
+}}}
+
+{{{id=41|
+rstor[0:nmov, 1]
+///
+array([ 0.03120001,  0.03120001,  0.03120001,  0.03120001,  0.03120001,
+        0.03120001])
+}}}
+
+{{{id=42|
+show(list_plot(rstor[0:nmov, 1], plotjoined=True) + list_plot(rstor[0:nmov, 79], plotjoined=True) + list_plot(rstor[0:nmov, 119], plotjoined=True))
+///
+<html><font color='black'><img src='cell://sage0.png'></font></html>
+}}}
+
+{{{id=43|
+rstor[0:nmov, 3]
+///
+array([ 0.03120002,  0.03120002,  0.03120002,  0.03120002,  0.03120002,
+        0.03120002])
+}}}
+
+{{{id=44|
+rstor[0:nmov, 10]
+///
+array([ 0.03120003,  0.03119957,  0.0311987 ,  0.0311987 ,  0.03119957,
+        0.03120003])
+}}}
+
+{{{id=46|
+rstor[0:nmov, 100]
+///
+array([ 0.01660943,  0.00882953,  0.00515049,  0.00515049,  0.00882953,
+        0.01660943])
+}}}
+
+{{{id=47|
+rstor[0:nmov, 119]
+///
+array([  119.,   720.,  1321.,  1922.,  2523.,  3124.])
+}}}
+
+{{{id=48|
+ptime
+///
+WARNING: Output truncated!  
+<html><a target='_new' href='/home/admin/4/cells/48/full_output.txt' class='file_link'>full_output.txt</a></html>
+
+
+
+array([  0.00000000e+00,   2.00000000e-02,   4.00000000e-02,
+         6.00000000e-02,   8.00000000e-02,   1.00000000e-01,
+         1.20000000e-01,   1.40000000e-01,   1.60000000e-01,
+         1.80000000e-01,   2.00000000e-01,   2.20000000e-01,
+         2.40000000e-01,   2.60000000e-01,   2.80000000e-01,
+         3.00000000e-01,   3.20000000e-01,   3.40000000e-01,
+         3.60000000e-01,   3.80000000e-01,   4.00000000e-01,
+         6.00000000e-01,   8.00000000e-01,   1.00000000e+00,
+         1.20000000e+00,   1.40000000e+00,   1.60000000e+00,
+         1.80000000e+00,   2.00000000e+00,   2.20000000e+00,
+         2.40000000e+00,   2.60000000e+00,   2.80000000e+00,
+         3.00000000e+00,   3.20000000e+00,   3.40000000e+00,
+         3.60000000e+00,   3.80000000e+00,   4.00000000e+00,
+         4.20000000e+00,   4.40000000e+00,   4.60000000e+00,
+         4.80000000e+00,   5.00000000e+00,   5.20000000e+00,
+         5.40000000e+00,   5.60000000e+00,   5.80000000e+00,
+         6.00000000e+00,   6.20000000e+00,   6.40000000e+00,
+         6.60000000e+00,   6.80000000e+00,   7.00000000e+00,
+         7.20000000e+00,   7.40000000e+00,   7.60000000e+00,
+         7.80000000e+00,   8.00000000e+00,   8.20000000e+00,
+         8.40000000e+00,   8.60000000e+00,   8.80000000e+00,
+         9.00000000e+00,   9.20000000e+00,   9.40000000e+00,
+         9.60000000e+00,   9.80000000e+00,   1.00000000e+01,
+         1.02000000e+01,   1.04000000e+01,   1.06000000e+01,
+         1.08000000e+01,   1.10000000e+01,   1.12000000e+01,
+         1.14000000e+01,   1.16000000e+01,   1.18000000e+01,
+         1.20000000e+01,   1.22000000e+01,   1.24000000e+01,
+         1.26000000e+01,   1.28000000e+01,   1.30000000e+01,
+         1.32000000e+01,   1.34000000e+01,   1.36000000e+01,
+         1.38000000e+01,   1.40000000e+01,   1.42000000e+01,
+         1.44000000e+01,   1.46000000e+01,   1.48000000e+01,
+         1.50000000e+01,   1.52000000e+01,   1.54000000e+01,
+         1.56000000e+01,   1.58000000e+01,   1.60000000e+01,
+         1.62000000e+01,   1.64000000e+01,   1.66000000e+01,
+         1.68000000e+01,   1.70000000e+01,   1.72000000e+01,
+         1.74000000e+01,   1.76000000e+01,   1.78000000e+01,
+         1.80000000e+01,   1.82000000e+01,   1.84000000e+01,
+         1.86000000e+01,   1.88000000e+01,   1.90000000e+01,
+         1.92000000e+01,   1.94000000e+01,   1.96000000e+01,
+         1.98000000e+01,   2.00000000e+01,   2.02000000e+01,
+         2.04000000e+01,   2.06000000e+01,   2.08000000e+01,
+         2.10000000e+01,   1.24000000e+02,   1.25000000e+02,
+         1.26000000e+02,   1.27000000e+02,   1.28000000e+02,
+         1.29000000e+02,   1.30000000e+02,   1.31000000e+02,
+         1.32000000e+02,   1.33000000e+02,   1.34000000e+02,
+         1.35000000e+02,   1.36000000e+02,   1.37000000e+02,
+         1.38000000e+02,   1.39000000e+02,   1.40000000e+02,
+         1.41000000e+02,   1.42000000e+02,   1.43000000e+02,
+         1.44000000e+02,   1.45000000e+02,   1.46000000e+02,
+         1.47000000e+02,   1.48000000e+02,   1.49000000e+02,
+         1.50000000e+02,   1.51000000e+02,   1.52000000e+02,
+         1.53000000e+02,   1.54000000e+02,   1.55000000e+02,
+         1.56000000e+02,   1.57000000e+02,   1.58000000e+02,
+         1.59000000e+02,   1.60000000e+02,   1.61000000e+02,
+         1.62000000e+02,   1.63000000e+02,   1.64000000e+02,
+         1.65000000e+02,   1.66000000e+02,   1.67000000e+02,
+         1.68000000e+02,   1.69000000e+02,   1.70000000e+02,
+         1.71000000e+02,   1.72000000e+02,   1.73000000e+02,
+         1.74000000e+02,   1.75000000e+02,   1.76000000e+02,
+
+...
+
+         4.23000000e+02,   4.24000000e+02,   4.25000000e+02,
+         4.26000000e+02,   4.27000000e+02,   4.28000000e+02,
+         4.29000000e+02,   4.30000000e+02,   4.31000000e+02,
+         4.32000000e+02,   4.33000000e+02,   4.34000000e+02,
+         4.35000000e+02,   4.36000000e+02,   4.37000000e+02,
+         4.38000000e+02,   4.39000000e+02,   4.40000000e+02,
+         4.41000000e+02,   4.42000000e+02,   4.43000000e+02,
+         4.44000000e+02,   4.45000000e+02,   4.46000000e+02,
+         4.47000000e+02,   4.48000000e+02,   4.49000000e+02,
+         4.50000000e+02,   4.51000000e+02,   4.52000000e+02,
+         4.53000000e+02,   4.54000000e+02,   4.55000000e+02,
+         4.56000000e+02,   4.57000000e+02,   4.58000000e+02,
+         4.59000000e+02,   4.60000000e+02,   4.61000000e+02,
+         4.62000000e+02,   4.63000000e+02,   4.64000000e+02,
+         4.65000000e+02,   4.66000000e+02,   4.67000000e+02,
+         4.68000000e+02,   4.69000000e+02,   4.70000000e+02,
+         4.71000000e+02,   4.72000000e+02,   4.73000000e+02,
+         4.74000000e+02,   4.75000000e+02,   4.76000000e+02,
+         4.77000000e+02,   4.78000000e+02,   4.79000000e+02,
+         4.80000000e+02,   4.81000000e+02,   4.82000000e+02,
+         4.83000000e+02,   4.84000000e+02,   4.85000000e+02,
+         4.86000000e+02,   4.87000000e+02,   4.88000000e+02,
+         4.89000000e+02,   4.90000000e+02,   4.91000000e+02,
+         4.92000000e+02,   4.93000000e+02,   4.94000000e+02,
+         4.95000000e+02,   4.96000000e+02,   4.97000000e+02,
+         4.98000000e+02,   4.99000000e+02,   5.00000000e+02,
+         5.01000000e+02,   5.02000000e+02,   5.03000000e+02,
+         5.04000000e+02,   5.05000000e+02,   5.06000000e+02,
+         5.07000000e+02,   5.08000000e+02,   5.09000000e+02,
+         5.10000000e+02,   5.11000000e+02,   5.12000000e+02,
+         5.13000000e+02,   5.14000000e+02,   5.15000000e+02,
+         5.16000000e+02,   5.17000000e+02,   5.18000000e+02,
+         5.19000000e+02,   5.20000000e+02,   5.21000000e+02,
+         5.22000000e+02,   5.23000000e+02,   5.24000000e+02,
+         5.25000000e+02,   5.26000000e+02,   5.27000000e+02,
+         5.28000000e+02,   5.29000000e+02,   5.30000000e+02,
+         5.31000000e+02,   5.32000000e+02,   5.33000000e+02,
+         5.34000000e+02,   5.35000000e+02,   5.36000000e+02,
+         5.37000000e+02,   5.38000000e+02,   5.39000000e+02,
+         5.40000000e+02,   5.41000000e+02,   5.42000000e+02,
+         5.43000000e+02,   5.44000000e+02,   5.45000000e+02,
+         5.46000000e+02,   5.47000000e+02,   5.48000000e+02,
+         5.49000000e+02,   5.50000000e+02,   5.51000000e+02,
+         5.52000000e+02,   5.53000000e+02,   5.54000000e+02,
+         5.55000000e+02,   5.56000000e+02,   5.57000000e+02,
+         5.58000000e+02,   5.59000000e+02,   5.60000000e+02,
+         5.61000000e+02,   5.62000000e+02,   5.63000000e+02,
+         5.64000000e+02,   5.65000000e+02,   5.66000000e+02,
+         5.67000000e+02,   5.68000000e+02,   5.69000000e+02,
+         5.70000000e+02,   5.71000000e+02,   5.72000000e+02,
+         5.73000000e+02,   5.74000000e+02,   5.75000000e+02,
+         5.76000000e+02,   5.77000000e+02,   5.78000000e+02,
+         5.79000000e+02,   5.80000000e+02,   5.81000000e+02,
+         5.82000000e+02,   5.83000000e+02,   5.84000000e+02,
+         5.85000000e+02,   5.86000000e+02,   5.87000000e+02,
+         5.88000000e+02,   5.89000000e+02,   5.90000000e+02,
+         5.91000000e+02,   5.92000000e+02,   5.93000000e+02,
+         5.94000000e+02,   5.95000000e+02,   5.96000000e+02,
+         5.97000000e+02,   5.98000000e+02,   5.99000000e+02,
+         6.00000000e+02])
+}}}
+
+{{{id=50|
 
 ///
 }}}
