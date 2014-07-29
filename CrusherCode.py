@@ -1,6 +1,6 @@
 
 {{{id=56|
-import numpy
+import numpy as np
 from numpy.linalg import inv
 
 perm0 = 1.25663706*1e-6
@@ -113,6 +113,8 @@ class Crusher:
         self.ntim = 600
         self.ddt = 0.00002
         self.nchange = 20
+        
+        self.movecan = True
 
         self.coilI = numpy.array(range(self.ntim+1), dtype=float)
         self.coilOutTime = numpy.array(range((self.ntim+1)*2), dtype=float)
@@ -231,6 +233,225 @@ class Crusher:
 
         return mreduced
 
+
+    #Calculate_current function moved up to the OO world
+    def compute_current(self):
+
+        #first, we'll need some working arrays
+        for i in range(0,self.nfix):
+            self.ccur[i] = self.cur[0]
+    
+        for i in range(self.nfix,self.nfix+self.nmov):
+            self.ccur[i] = self.cur[i-self.nfix+1]
+    
+        #variable names are copied from the original code
+        nc1 = self.nmov+1
+        nc11 = self.nmov
+        idot = numpy.array(range(nc1), dtype=float)
+ 
+        vv = numpy.array(range(nc1), dtype=float)
+    
+        #and here's the rather large array
+        #that in fact never gets used for anything in the code, so I'm going to 
+        #comment it out.  It does look like it would make a good debug tool though
+        #pcur = numpy.array(range(nc1*ntim), dtype=float)
+        #pcur.shape = (nc1, ntim)
+    
+        yp = numpy.array(range(self.ntim), dtype=float)
+        tim = numpy.array(range(self.ntim), dtype=float)
+        tim[0] = 0
+    
+    
+        #add the external inductance into the reduced mutual inductance array
+        for i in range(0, self.nmov+1):
+            self.mm[i,i] = self.mm[i,i]+self.lckt[i]
+    
+    
+        #NOTE:  Here's why we left a copy of the original mm hanging around in mmold
+        dmmdt = (self.mm-self.mmold)/self.dt
+    
+        #make a copy of mm
+        mident = self.mm.copy
+    
+        #now, invert mm
+        minv = inv(self.mm)
+    
+        #make the inverse symmetric
+        for i in range(0, self.nmov):
+            for j in range(i+1, self.nmov+1):
+                minv[i,j] = (minv[i,j]+minv[j,i])/2.0
+                minv[j,i] = minv[i,j]
+            
+        #now compute the currents in the coils
+        #the following is an operation on matrices, but appears not to be a matrix multiply
+        #which would be denoted in IDL by #  I'm guessing it just multiplies element by element
+        #eyer looks like a voltage
+        eyer = self.cur*self.res
+
+        #c = q/v so quec looks like a voltage
+        quec = self.qq*self.adc
+
+        #The following actually is a matrix multiply
+        #it's cute because it's not l*di/dt
+        idldt = np.dot(dmmdt, self.cur)
+    
+        #Make the arrays symmetric as usual
+        for i in range(1, (self.nmov/2)+1):
+            iii=self.nmov+1-i
+            eyer[i]=(eyer[i]+eyer[iii])/2.0  
+            eyer[iii]=eyer[i]
+            quec[i]=(quec[i]+quec[iii])/2.0  
+            quec[iii]=quec[i]
+            idldt[i]=(idldt[i]+idldt[iii])/2.0  
+            idldt[iii]=idldt[i]
+        
+        #voltage drop due to the admittance, (although, seems to be just cancelling the 
+        #capacitance back out
+        #minus the resistive voltage drop minus the inductive voltage drop
+        #keep in mind that each argument is an array
+        vv=quec-eyer-idldt
+    
+        #what is this for?
+        idot=np.dot(minv, vv)
+    
+        #Looks like we're making idot symmetric as well
+        for i in range(1, (self.nmov/2)+1):
+            iii=self.nmov+1-i
+            idot[i]=(idot[i]+idot[iii])/2 
+            idot[iii]=idot[i]
+        
+        #This is an array operation
+        self.cur=self.cur+idot*self.dt
+    
+        self.qq=self.qq-self.adc*self.cap*self.cur*self.dt
+        self.coilI[self.cntr]=self.cur[0] 
+        self.coilOutTime[self.cntr,0]= self.ptime[self.cntr]
+        self.coilOutTime[self.cntr,1] = self.cur[0]
+    
+        denrg=(self.cur[0]*self.qq[0]*self.dt)/self.cap[0]
+    
+        self.zeroline[self.cntr]=0.0
+    
+        #this variable is actually local!
+        sbz = 0.0
+    
+        for j in range(0, self.nfix+self.nmov):
+            zz = self.z[j]
+            rr = 0.0
+            rso = self.r[j]
+            curr = 1e3*self.ccur[j]
+            #implement the portion of dbcoil that returns bz
+            sbz = sbz + dbcoilbzrzero(rso, zz, rr, curr)
+            #sbz = sbz + bz
+        
+        #This is the field in kGauss
+        self.bzero[self.cntr] = 10*sbz
+        tms = 1e3*self.time
+    
+        #Calculate the heat
+        dheat = 0.0
+        for i in range(1, self.nmov+1):
+            tt=self.temp[i]
+            sig = specheat(tt)
+            enrg = self.cur[i]^2*self.res[i]*self.dt
+            dheat = dheat + enrg
+            dtemp = dheat/(sig*self.mass)
+            self.temp[i] = self.temp[i] + dtemp
+            tt = self.temp[i]
+            rho = rstvty(tt)
+            #Cool!  Updating the resistance based on the temperature change
+            #in the can
+            self.res[i] = 1e3*rho*2*pi*self.rcan/(self.thickness*self.delta)
+            
+    def move_can(self):
+
+    
+        brg = numpy.array(range(self.nfix + self.nmov), dtype=float)
+        bzt = numpy.array(range(self.nfix + self.nmov), dtype=float)
+    
+        for i in range(1,self.nmov+1):
+            sbz = 0.0
+            imov = self.nfix + i - 1
+            for j in range(0,self.nfix+self.nmov):
+                if j==imov:
+                     break
+                zz = self.z[imov]-self.z[j]
+                rr = self.r[imov]
+                rso = self.r[j]
+                curr = 1e3*self.ccur[j]
+                #if rr is zero, the can has broken in half and all bets are off anyway           
+                #if rr == 0:
+                #    sbz = sbz + dbcoilbzrzero(rso, zz, rr, curr)
+                #else:
+                sbz = sbz + dbcoilbz(rso, zz, rr, curr)
+                
+            bzt[i+self.nfix-1] = sbz
+        dwork = 0.0
+
+        for i in range(1,(self.nmov/2)+1):
+            #This looks like we're hitting opposite edges of the moving coils, the can, and 
+            #working towards the center
+            #print "i"
+            #print i
+            ii=self.nfix+i-1
+            iii = (self.nfix + self.nmov) - i
+        
+            #Find force in kNewtons
+            forcer = bzt[ii]*self.ccur[ii]*2*pi*self.r[ii]
+            
+            #Get the differential in velocity from the force and mass
+            dvr = forcer*self.dt/self.mass
+            vrnew = self.vr[ii]+dvr
+        
+            #get the new r position using the velocity
+            rnew=self.r[ii]+self.vr[ii]*1e-3*self.dt
+
+        
+            #Find work in Joules
+            dwork=dwork+2*forcer*vrnew*self.dt
+            self.vr[ii]=vrnew
+            self.r[ii] = rnew
+            self.vr[iii]=vrnew
+            self.r[iii]=rnew
+        #print "completed loop"        
+    
+    def simulate(self, endtime):
+        for kk in range(0,endtime):
+            #if the counter has advanced beyond nchange, then make the time step larger
+            if self.cntr >= self.nchange:
+                self.dt = self.ddt*10
+            print self.cntr
+            self.cntr = self.cntr + 1
+            self.time = self.time + self.dt
+            #store the current time in microseconds
+            self.ptime[self.cntr] = self.time*1e3
+    
+            #Even though these funcitons have been called in initialize, it's important to call them even on 
+            #the first loop through here.  Otherwise, mmold winds up with junk in it.
+            #now, find the mutual inductance
+
+            self.mfull = self.find_mutual_inductance(self.mfull)
+            #then, reduce the mutual inductance array again
+
+            self.mm = self.make_reduced_matrix(self.mm, self.mfull)
+            #now, finally, the first new simulation step, compute the currents
+            print "Time in microseconds"
+            print self.ptime[self.cntr]
+            self.compute_current()
+            if self.movecan:
+                self.move_can()
+    
+            #track the heat and work for this step
+            self.heatenrg[self.cntr]=self.heatenrg[self.cntr+1]+self.dheat
+            self.work[self.cntr]=self.work[self.cntr-1]+self.dwork
+            self.enrgtot[self.cntr]=self.enrgtot[self.cntr-1]+self.denrg
+            for jj in range(0,self.nmov):
+                jjmov = jj + self.nfix
+                self.rstor[jj,kk+1] = self.r[jjmov]
+                self.zstor[jj,kk+1] = self.z[jjmov]
+
+    def set_movecan(self, move):
+        self.movecan = move
 #This concludes all the setup of variables that is done by the initialize function
 
 
@@ -260,27 +481,164 @@ class Crusher:
 
 {{{id=57|
 #Cool, now, create an object
+nm_crushtest = Crusher()
+nm_crushtest.set_movecan(False)
+nm_crushtest.simulate(372)
+
 crushtest = Crusher()
+crushtest.simulate(372)
 ///
+WARNING: Output truncated!  
+<html><a target='_new' href='/home/admin/4/cells/57/full_output.txt' class='file_link'>full_output.txt</a></html>
+
+
+
+0
+Time in microseconds
+0.02
+1
+Time in microseconds
+0.04
+2
+Time in microseconds
+0.06
+3
+Time in microseconds
+0.08
+4
+Time in microseconds
+0.1
+5
+Time in microseconds
+0.12
+6
+Time in microseconds
+0.14
+7
+Time in microseconds
+0.16
+8
+Time in microseconds
+0.18
+9
+Time in microseconds
+0.2
+10
+Time in microseconds
+0.22
+11
+Time in microseconds
+0.24
+12
+Time in microseconds
+0.26
+13
+Time in microseconds
+0.28
+14
+Time in microseconds
+0.3
+15
+Time in microseconds
+0.32
+16
+Time in microseconds
+0.34
+17
+Time in microseconds
+0.36
+18
+Time in microseconds
+0.38
+19
+Time in microseconds
+
+...
+
+352
+Time in microseconds
+67.0
+353
+Time in microseconds
+67.2
+354
+Time in microseconds
+67.4
+355
+Time in microseconds
+67.6
+356
+Time in microseconds
+67.8
+357
+Time in microseconds
+68.0
+358
+Time in microseconds
+68.2
+359
+Time in microseconds
+68.4
+360
+Time in microseconds
+68.6
+361
+Time in microseconds
+68.8
+362
+Time in microseconds
+69.0
+363
+Time in microseconds
+69.2
+364
+Time in microseconds
+69.4
+365
+Time in microseconds
+69.6
+366
+Time in microseconds
+69.8
+367
+Time in microseconds
+70.0
+368
+Time in microseconds
+70.2
+369
+Time in microseconds
+70.4
+370
+Time in microseconds
+70.6
+371
+Time in microseconds
+70.8
 }}}
 
 {{{id=34|
-crushtest.mm
+nomove = list_plot(nm_crushtest.coilOutTime[0:372, 0:2], color='red')
+move = list_plot(crushtest.coilOutTime[0:372, 0:2], color='blue')
+show(nomove + move)
 ///
-array([[ 1.00491907,  0.21781373,  0.27722786,  0.32387533,  0.32387533,
-         0.27722786,  0.21781373],
-       [ 0.21781373,  0.13039726,  0.09826708,  0.07426194,  0.05946457,
-         0.04906901,  0.04127011],
-       [ 0.27722786,  0.09826708,  0.13039726,  0.09826708,  0.07433023,
-         0.05946457,  0.04906901],
-       [ 0.32387533,  0.07426194,  0.09826708,  0.13039726,  0.09838592,
-         0.07433023,  0.05946457],
-       [ 0.32387533,  0.05946457,  0.07433023,  0.09838592,  0.13039726,
-         0.09826708,  0.07426194],
-       [ 0.27722786,  0.04906901,  0.05946457,  0.07433023,  0.09826708,
-         0.13039726,  0.09826708],
-       [ 0.21781373,  0.04127011,  0.04906901,  0.05946457,  0.07426194,
-         0.09826708,  0.13039726]])
+<html><font color='black'><img src='cell://sage0.png'></font></html>
+}}}
+
+{{{id=60|
+show(list_plot(crushtest.rstor[0:crushtest.nmov, 1], plotjoined=True) + list_plot(crushtest.rstor[0:crushtest.nmov, 77], plotjoined=True) + list_plot(crushtest.rstor[0:crushtest.nmov, 138], plotjoined=True) + list_plot(crushtest.rstor[0:crushtest.nmov, 198], plotjoined=True) + list_plot(crushtest.rstor[0:crushtest.nmov, 258], plotjoined=True) + list_plot(crushtest.rstor[0:crushtest.nmov, 318], plotjoined=True) + list_plot(crushtest.rstor[0:crushtest.nmov, 372], plotjoined=True))
+///
+<html><font color='black'><img src='cell://sage0.png'></font></html>
+}}}
+
+{{{id=59|
+
+///
+}}}
+
+{{{id=58|
+
+///
 }}}
 
 {{{id=11|
