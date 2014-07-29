@@ -1,119 +1,15 @@
 
-{{{id=34|
+{{{id=56|
 import numpy
 from numpy.linalg import inv
-global mfull
 
+perm0 = 1.25663706*1e-6
+
+
+#Simple Sage objects that live outside the class for now
 rstvty(temperature)=(4.5+1.133*10^-2*temperature)*10^-8
 #Returns the specific heat in J/Kg/K
 specheat(temperature) = 4.18*(0.16+1.5e-4*temperature)*1000.0    
-
-
-#setup the constants
-perm0 = 1.25663706*1e-6
-nmov = 6
-nfix = 3
-
-#need to change this for Pb
-density = 2824.0
-
-thickness = .00016
-
-#Setup an array for coil dimensions
-r = numpy.array([3.43e-2, 3.43e-2, 3.43e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2], dtype=float)
-#Here's the array for coil z coordinates
-z = numpy.array([-2.67e-03, 0.0e-00, 2.67e-3,-6.67e-3, -4.0E-3, -1.33E-3, 1.33E-3, 4.0E-3, 6.67E-3], dtype=float)
-#Here's the array for coil-can separtion
-dr = numpy.array([1.33E-3, 1.33E-3, 1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3], dtype=float)
-
-delta = abs(z[nmov+1] - z[nmov+2])
-
-#Here are two more arrays that are used, but I'm not sure what for yet
-#vr is the radial velocity of the can?  For some reason it included enough entries 
-#for the can and the fixed coil
-#vz is the z velocity, but it looks unused.  It looks like the axial force 
-#implementation was left incomplete in the initial version
-vr = numpy.array([0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
-vz = numpy.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], dtype=float)
-
-#NOTE:  r, z, and vr will all be modified by move can
-
-#array stores the temerature of the can under each coil
-temp = numpy.array([293.0, 293.0, 293.0, 293.0, 293.0, 293.0, 293.0], dtype=float)
-
-#in the following, we'll need the resistances and capacitances that were pulled 
-#from the input data file
-#The following are the resistance, capacitance, inductance, admittance, 
-#current, and charge arrays with one entry per can modelling coil
-#They have been filled in here with the values from the model data file
-#In the model data file, there are 7 values as opposed to the six I expected
-#I need todo check on this
-res = numpy.array([8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
-
-#Just changed the capacitance to 500 from 50
-cap = numpy.array([0.0004, -1, -1, -1, -1, -1, -1], dtype=float)
-
-lckt = numpy.array([0.05, 0, 0, 0, 0, 0, 0], dtype=float)
-
-cur = numpy.array([0.0, 0, 0, 0, 0, 0, 0], dtype=float)
-ccur = numpy.array(range(nmov+nfix), dtype=float)
-
-#Changed to 3000 from 5000
-V0 = numpy.array([3000.0, 0, 0, 0, 0, 0, 0], dtype=float)
-
-#setup the admittance matrix.  I've made this a single statement here, keep in mind that 
-#there's a there is a loop treatment in the original code
-adc = numpy.array([1/cap[0], 0, 0, 0, 0, 0, 0], dtype=float)
-qq = numpy.array([V0[0]*cap[0], 0, 0, 0, 0, 0, 0], dtype=float)
-
-#Here's a clue to how the radius positions of coil and can should be worked out
-#rcan = r[nfix+1]
-#the indexing above seems odd
-rcan = r[nfix+1]
-mass = 2*pi*rcan*density*thickness*delta
-
-#the next step is to fill in the res array with calls to rstvty
-#This begins to make more sense after a fahion.  The one bigger is intentional, the 
-#first value in the data file was real, all the others are filled in
-for i in range(1, nmov+1):
-    res[i] = 1e3*2*pi*rcan*rstvty(temp[i])/(thickness*delta)
-
-
-#arrays to hold the reduced mutual inductance matrix
-mm = numpy.array(range((nmov+1)^2), dtype=float)
-mm.shape=(nmov+1,nmov+1)
-mmold = mm.copy()
-
-#setting up the mutual inductance raw flux array
-mfull = numpy.array(range((nmov+nfix)*(nmov+nfix)), dtype=float)
-mfull.shape=(nmov+nfix,nmov+nfix)
-
-#now setup the variables for stepping through the simulation
-ntim = 600
-ddt = 0.00002
-nchange = 20
-
-coilI = numpy.array(range(ntim+1), dtype=float)
-coilOutTime = numpy.array(range((ntim+1)*2), dtype=float)
-coilOutTime.shape = (ntim+1, 2)
-bzero = numpy.array(range(ntim+1), dtype=float)
-zeroline = numpy.array(range(ntim+1), dtype=float)
-heatenrg = numpy.array(range(ntim+1), dtype=float)
-work = numpy.array(range(ntim+1), dtype=float)
-enrgtot = numpy.array(range(ntim+1), dtype=float)
-
-#store the current time in microseconds
-ptime = numpy.array(range(ntim+1), dtype=float)
-denrg = 0.0
-dheat = 0.0
-dwork = 0.0
-
-dt = ddt
-time = 0.0
-aaa = 1.0
-ntim1 = ntim-1
-#This concludes all the setup of variables that is done by the initialize function
-
 
 #setup the flux calculation that mimics what goes in in dbcoil
 #call it the same name as the original code for readability
@@ -130,29 +26,222 @@ bzfac(rcoil, zc, rc) = ((rcoil^2-rc^2)-zc^2)/(((rcoil-rc)^2)+zc^2)
 #Also, the term containing perm0 was supposed to be multiplied, not added
 dbcoilbz(rcoil, zc, rc, curren) = (bzfac(rcoil, zc, rc)*elliptic_ec(argm(rcoil, zc, rc))+elliptic_kc(argm(rcoil, zc, rc)))*((2*perm0*curren/(2*pi))/(t(rcoil, zc, rc)^0.5))
 
+
+global mfull
+
+
+class Crusher:
+
+    def __init__(self):
+
+        #Setup an array for coil dimensions
+        self.r = numpy.array([3.43e-2, 3.43e-2, 3.43e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2], dtype=float)
+    #Here's the array for coil z coordinates
+        self.z = numpy.array([-2.67e-03, 0.0e-00, 2.67e-3,-6.67e-3, -4.0E-3, -1.33E-3, 1.33E-3, 4.0E-3, 6.67E-3], dtype=float)
+        #Here's the array for coil-can separtion
+        self.dr = numpy.array([1.33E-3, 1.33E-3, 1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3], dtype=float)
+    
+
+
+
+
+
+        #setup the constants
+        self.nmov = 6
+        self.nfix = 3
+
+        #need to change this for Pb
+        self.density = 2824.0
+
+        self.thickness = .00016
+
+
+        self.delta = abs(self.z[self.nmov+1] - self.z[self.nmov+2])
+
+        #Here are two more arrays that are used, but I'm not sure what for yet
+        #vr is the radial velocity of the can?  For some reason it included enough entries 
+        #for the can and the fixed coil
+        #vz is the z velocity, but it looks unused.  It looks like the axial force 
+        #implementation was left incomplete in the initial version
+        self.vr = numpy.array([0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
+        self.vz = numpy.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], dtype=float)
+
+        #NOTE:  r, z, and vr will all be modified by move can
+
+        #array stores the temerature of the can under each coil
+        self.temp = numpy.array([293.0, 293.0, 293.0, 293.0, 293.0, 293.0, 293.0], dtype=float)
+
+        #in the following, we'll need the resistances and capacitances that were pulled 
+        #from the input data file
+        #The following are the resistance, capacitance, inductance, admittance, 
+        #current, and charge arrays with one entry per can modelling coil
+        #They have been filled in here with the values from the model data file
+        #In the model data file, there are 7 values as opposed to the six I expected
+        #I need todo check on this
+        self.res = numpy.array([8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
+
+        #Just changed the capacitance to 500 from 50
+        self.cap = numpy.array([0.0004, -1, -1, -1, -1, -1, -1], dtype=float)
+
+        self.lckt = numpy.array([0.05, 0, 0, 0, 0, 0, 0], dtype=float)
+
+        self.cur = numpy.array([0.0, 0, 0, 0, 0, 0, 0], dtype=float)
+        self.ccur = numpy.array(range(self.nmov+self.nfix), dtype=float)
+
+        #Changed to 3000 from 5000
+        self.V0 = numpy.array([3000.0, 0, 0, 0, 0, 0, 0], dtype=float)
+
+        #setup the admittance matrix.  I've made this a single statement here, keep in mind that 
+        #there's a there is a loop treatment in the original code
+        self.adc = numpy.array([1/self.cap[0], 0, 0, 0, 0, 0, 0], dtype=float)
+        self.qq = numpy.array([self.V0[0]*self.cap[0], 0, 0, 0, 0, 0, 0], dtype=float)
+
+        #Here's a clue to how the radius positions of coil and can should be worked out
+        #rcan = r[self.nfix+1]
+        #the indexing above seems odd
+        self.rcan = self.r[self.nfix+1]
+        self.mass = 2*pi*self.rcan*self.density*self.thickness*self.delta
+
+        #the next step is to fill in the res array with calls to rstvty
+        #This begins to make more sense after a fahion.  The one bigger is intentional, the 
+        #first value in the data file was real, all the others are filled in
+        for i in range(1, self.nmov+1):
+            self.res[i] = 1e3*2*pi*self.rcan*rstvty(self.temp[i])/(self.thickness*self.delta)
+
+
+        #now setup the variables for stepping through the simulation
+        self.ntim = 600
+        self.ddt = 0.00002
+        self.nchange = 20
+
+        self.coilI = numpy.array(range(self.ntim+1), dtype=float)
+        self.coilOutTime = numpy.array(range((self.ntim+1)*2), dtype=float)
+        self.coilOutTime.shape = (self.ntim+1, 2)
+        self.bzero = numpy.array(range(self.ntim+1), dtype=float)
+        self.zeroline = numpy.array(range(self.ntim+1), dtype=float)
+        self.heatenrg = numpy.array(range(self.ntim+1), dtype=float)
+        self.work = numpy.array(range(self.ntim+1), dtype=float)
+        self.enrgtot = numpy.array(range(self.ntim+1), dtype=float)
+
+        #store the current time in microseconds
+        self.ptime = numpy.array(range(self.ntim+1), dtype=float)
+        self.denrg = 0.0
+        self.dheat = 0.0
+        self.dwork = 0.0
+
+        self.dt = self.ddt
+        self.time = 0.0
+        self.aaa = 1.0
+        self.ntim1 = self.ntim-1
+
+        #Here are the arrays that will hold the data from the simulation
+        self.rstor = numpy.array(range(self.nmov*(self.ntim+1)), dtype=float)
+        self.rstor.shape = (self.nmov, self.ntim+1)
+
+        self.zstor = numpy.array(range(self.nmov*(self.ntim+1)), dtype=float)
+        self.zstor.shape = (self.nmov, self.ntim+1)
+
+        self.cntr = 0
+
+        self.ptime[0] = 0.0
+        self.coilI[0] = 0.0
+        self.bzero[0] = 0.0
+        self.zeroline[0] = 0.0
+        self.pctr = 0
+        self.heatenrg[0] = 0.0
+        self.enrgtot[0] = 0.0
+        self.work[0] = 0.0
+
+    
+    
+
+        #load the rstor and zstor arrays with the initial positions of the moving coils
+        for jj in range(0, self.nfix):
+            self.rstor[jj,0] = self.r[jj+self.nfix]
+            self.zstor[jj,0] = self.z[jj+self.nfix]
+
+        #arrays to hold the reduced mutual inductance matrix
+        self.mm = numpy.array(range((self.nmov+1)^2), dtype=float)
+        self.mm.shape=(self.nmov+1,self.nmov+1)
+        self.mmold = self.mm.copy()
+        
+        #setting up the mutual inductance raw flux array
+        self.mfull = numpy.array(range((self.nmov+self.nfix)*(self.nmov+self.nfix)), dtype=float)
+        self.mfull.shape=(self.nmov+self.nfix,self.nmov+self.nfix)
+        
+        #initialize the raw mutual inductance array
+        self.mfull = self.find_mutual_inductance(self.mfull)
+
+        self.mm = self.make_reduced_matrix(self.mm, self.mfull)
+
+
+    #The mutual inductance array has to be calculated multiple times, so I'm putting 
+    #it into a Python funcion, (I hope)
+    def find_mutual_inductance(self, mfullarray):
+
+        #first for the off-diagonal elements
+        for i in range(0, self.nmov+self.nfix-1):
+           for j in range(i+1, self.nmov+self.nfix):
+                mfullarray[i,j] = dbcoilflux(self.r[i], self.z[j]-self.z[i], self.r[j]-self.dr[j], 1)
+    
+        #next for the diagonal elements
+        for i in range(0, self.nmov+self.nfix):
+            mfullarray[i,i] = dbcoilflux(self.r[i], self.z[i]-self.z[i], self.r[i]-self.dr[i], 1)
+   
+        #finally copy the off diagonal elements to the other side of the array
+        #crap, there appears to be a bug below.  Moving mfull -> mfullarray
+        for i in range(1, self.nmov+self.nfix):
+            for j in range(0, i):
+                mfullarray[i,j] = mfullarray[j,i]
+            
+        return mfullarray
+
+    #also create a function here that encapsulates the reduced array creation
+    #since this will need to be called multiple times
+    def make_reduced_matrix(self, mreduced, mfullwork):
+        self.mmold = self.mm.copy()
+        jmwork = numpy.array(range(self.nmov), dtype=float)
+        #nt contains the fixed coil portion of the mutual inductance array
+        #it's actually just a 
+        ntwork = self.mfull[0:(self.nfix), 0:(self.nfix)].copy()
+        nttwork = sum(ntwork)
+    
+        #jt is used to total the mutual inductance associated with each moveable coil
+        #the result is placed in the jmwork array
+        for i in range(0, self.nmov):
+            jtwork=self.mfull[i+self.nfix,0:self.nfix].copy()
+            jmwork[i]=sum(jtwork)
+    
+        #Here's why mm was dimensioned one bigger than it should have been
+        #I don't have a good reason for this yet other than it came out of the old code
+        #notice, however that we do overwrite the 0 row and column next
+        mreduced = mfullwork[self.nfix-1:self.nmov+self.nfix, self.nfix-1:self.nmov+self.nfix].copy()
+        mreduced = 1e6*mreduced
+        #print "mfullwork"
+        #print mfullwork
+        #print "mreduced"
+        #print mreduced
+        #mm = mm*1e6
+
+        for i in range(1, self.nmov+1):
+            mreduced[i,0] = 1e6*jmwork[i-1]
+            mreduced[0,i] = 1e6*jmwork[i-1]
+    
+        mreduced[0,0] = 1e6*nttwork
+
+        return mreduced
+
+#This concludes all the setup of variables that is done by the initialize function
+
+
+
 #now take mfull created above and use it to generate the reduced mutual induction matrix mm
 #mm is dimensioned for only the moving coils plus one extra row and column
 #ultimately we'll need to track the immediately previous version of mm
 #in the original code this is called mmold, and here too!
 
-#The mutual inductance array has to be calculated multiple times, so I'm putting 
-#it into a Python funcion, (I hope)
-def find_mutual_inductance(mfullarray):
-    #first for the off-diagonal elements
-    for i in range(0, nmov+nfix-1):
-       for j in range(i+1, nmov+nfix):
-            mfullarray[i,j] = dbcoilflux(r[i], z[j]-z[i], r[j]-dr[j], 1)
-    
-    #next for the diagonal elements
-    for i in range(0, nmov+nfix):
-        mfullarray[i,i] = dbcoilflux(r[i], z[i]-z[i], r[i]-dr[i], 1)
-   
-    #finally copy the off diagonal elements to the other side of the array
-    for i in range(1, nmov+nfix):
-        for j in range(0, i):
-            mfullarray[i,j] = mfull[j,i]
-            
-    return mfullarray
+
+
 
 #The above was to provide the magnetic flux at one coil due to another for finding 
 #the mutual inductance of a set of two coils.  The following models the coils and 
@@ -162,72 +251,36 @@ def find_mutual_inductance(mfullarray):
 #The documentation for numpy arrays is the easiest for me to read, so I'm going that 
 #direction.  I went ahead and put the import at the top of the worksheet
 
-#also create a function here that encapsulates the reduced array creation
-#since this will need to be called multiple times
-def make_reduced_matrix(mreduced, mfullwork):
-    global mmold
-    mmold = mm.copy()
-    jmwork = numpy.array(range(nmov), dtype=float)
-    #nt contains the fixed coil portion of the mutual inductance array
-    #it's actually just a 
-    ntwork = mfull[0:(nfix), 0:(nfix)].copy()
-    nttwork = sum(ntwork)
     
-    #jt is used to total the mutual inductance associated with each moveable coil
-    #the result is placed in the jmwork array
-    for i in range(0, nmov):
-        jtwork=mfull[i+nfix,0:nfix].copy()
-        jmwork[i]=sum(jtwork)
-    
-    #Here's why mm was dimensioned one bigger than it should have been
-    #I don't have a good reason for this yet other than it came out of the old code
-    #notice, however that we do overwrite the 0 row and column next
-    mreduced = mfullwork[nfix-1:nmov+nfix, nfix-1:nmov+nfix].copy()
-    mreduced = 1e6*mreduced
-    #print "mfullwork"
-    #print mfullwork
-    #print "mreduced"
-    #print mreduced
-    #mm = mm*1e6
-
-    for i in range(1, nmov+1):
-        mreduced[i,0] = 1e6*jmwork[i-1]
-        mreduced[0,i] = 1e6*jmwork[i-1]
-    
-    mreduced[0,0] = 1e6*nttwork
-
-    return mreduced
-    
-#Here are the arrays that will hold the data from the simulation
-rstor = numpy.array(range(nmov*(ntim+1)), dtype=float)
-rstor.shape = (nmov, ntim+1)
-
-zstor = numpy.array(range(nmov*(ntim+1)), dtype=float)
-zstor.shape = (nmov, ntim+1)
-
-cntr = 0
-
-ptime[0] = 0.0
-coilI[0] = 0.0
-bzero[0] = 0.0
-zeroline[0] = 0.0
-pctr = 0
-heatenrg[0] = 0.0
-enrgtot[0] = 0.0
-work[0] = 0.0
-
-    
-    
-#calls to initialize the code.  This should eventually be put into an initialize funciton
-mfull = find_mutual_inductance(mfull)
-
-mm = make_reduced_matrix(mm, mfull)
-
-#load the rstor and zstor arrays with the initial positions of the moving coils
-for jj in range(0, nfix):
-    rstor[jj,0] = r[jj+nfix]
-    zstor[jj,0] = z[jj+nfix]
+#calls to initialize the code.  This should eventually be put into an initialize function
+#First, let's see if it reads in ok
+#initialize()
 ///
+}}}
+
+{{{id=57|
+#Cool, now, create an object
+crushtest = Crusher()
+///
+}}}
+
+{{{id=34|
+crushtest.mm
+///
+array([[ 1.00491907,  0.21781373,  0.27722786,  0.32387533,  0.32387533,
+         0.27722786,  0.21781373],
+       [ 0.21781373,  0.13039726,  0.09826708,  0.07426194,  0.05946457,
+         0.04906901,  0.04127011],
+       [ 0.27722786,  0.09826708,  0.13039726,  0.09826708,  0.07433023,
+         0.05946457,  0.04906901],
+       [ 0.32387533,  0.07426194,  0.09826708,  0.13039726,  0.09838592,
+         0.07433023,  0.05946457],
+       [ 0.32387533,  0.05946457,  0.07433023,  0.09838592,  0.13039726,
+         0.09826708,  0.07426194],
+       [ 0.27722786,  0.04906901,  0.05946457,  0.07433023,  0.09826708,
+         0.13039726,  0.09826708],
+       [ 0.21781373,  0.04127011,  0.04906901,  0.05946457,  0.07426194,
+         0.09826708,  0.13039726]])
 }}}
 
 {{{id=11|
@@ -384,6 +437,7 @@ def compute_current():
         idot[i]=(idot[i]+idot[iii])/2 
         idot[iii]=idot[i]
         
+    #This is an array operation
     cur=cur+idot*dt
     
     qq=qq-adc*cap*cur*dt
@@ -466,8 +520,8 @@ def move_can():
                 
         bzt[i+nfix-1] = sbz
     dwork = 0.0
-    print "nmov"
-    print nmov
+    #print "nmov"
+    #print nmov
     for i in range(1,(nmov/2)+1):
         #This looks like we're hitting opposite edges of the moving coils, the can, and 
         #working towards the center
@@ -485,12 +539,12 @@ def move_can():
         
         #get the new r position using the velocity
         rnew=r[ii]+vr[ii]*1e-3*dt
-        print "rii"
-        print r[ii]
-        print "vrii"
-        print vr[ii]
-        print"dt"
-        print dt
+        #print "rii"
+        #print r[ii]
+        #print "vrii"
+        #print vr[ii]
+        #print"dt"
+        #print dt
         
         #Find work in Joules
         dwork=dwork+2*forcer*vrnew*dt
@@ -504,8 +558,12 @@ def move_can():
 
 {{{id=13|
 #The simulation code lives in this cell
+#Initialize the code
+initialize()
+
 #currently, the full time range takes a while with ntim
 #for kk in range(0,ntim):
+
 for kk in range(0,599):
     #if the counter has advanced beyond nchange, then make the time step larger
     if cntr >= nchange:
@@ -539,114 +597,14 @@ for kk in range(0,599):
         rstor[jj,kk+1] = r[jjmov]
         zstor[jj,kk+1] = z[jjmov]
 ///
-WARNING: Output truncated!  
-<html><a target='_new' href='/home/admin/4/cells/13/full_output.txt' class='file_link'>full_output.txt</a></html>
-
-
-
-0
-Time in microseconds
-0.02
-nmov
-6
-rii
-0.0312
-vrii
-0.0
-dt
-0.0000200000000000000
-rii
-0.0312
-vrii
-0.0
-dt
-0.0000200000000000000
-rii
-0.0312
-vrii
-0.0
-dt
-0.0000200000000000000
-1
-Time in microseconds
-0.04
-nmov
-6
-rii
-0.0312
-vrii
-0.0
-dt
-0.0000200000000000000
-rii
-0.0312
-vrii
-0.0
-dt
-0.0000200000000000000
-rii
-0.0312
-vrii
-0.0
-dt
-0.0000200000000000000
-2
-Time in microseconds
-0.06
-nmov
-6
-rii
-0.0312
-vrii
--3.99739763824e-05
-dt
-0.0000200000000000000
-rii
-0.0312
-
-...
-
--1997.16116142
-dt
-0.000200000000000000
-rii
-0.000699493405975
-vrii
--223576.000204
-dt
-0.000200000000000000
-373
-Time in microseconds
-71.2
-nmov
-6
-rii
-0.0148691353609
-vrii
--7.16298924633e+15
-dt
-0.000200000000000000
-rii
-0.00631338234694
-vrii
--1.42076942567e+17
-dt
-0.000200000000000000
-rii
--0.0440157066348
-vrii
--1.67240907326e+19
-dt
-0.000200000000000000
-374
-Traceback (most recent call last):            dt = ddt*10
+Traceback (most recent call last):    
   File "", line 1, in <module>
     
-  File "/tmp/tmpNWTLGS/___code___.py", line 5, in <module>
-    exec compile(u'for kk in range(_sage_const_0 ,_sage_const_599 ):\n    #if the counter has advanced beyond nchange, then make the time step larger\n    if cntr >= nchange:\n        dt = ddt*_sage_const_10 \n    print cntr\n    cntr = cntr + _sage_const_1 \n    time = time + dt\n    #store the current time in microseconds\n    ptime[cntr] = time*_sage_const_1e3 \n    \n    #Even those these funcitons have been called in initialize, it\'s important to call them even on \n    #the first loop through here.  Otherwise, mmold winds up with junk in it.\n    #now, find the mutual inductance\n    global mfull\n    mfull = find_mutual_inductance(mfull)\n    #then, reduce the mutual inductance array again\n    global mm\n    mm = make_reduced_matrix(mm, mfull)\n    #now, finally, the first new simulation step, compute the currents\n    print "Time in microseconds"\n    print ptime[cntr]\n    compute_current()\n    move_can()\n    \n    #track the heat and work for this step\n    heatenrg[cntr]=heatenrg[cntr+_sage_const_1 ]+dheat\n    work[cntr]=work[cntr-_sage_const_1 ]+dwork\n    enrgtot[cntr]=enrgtot[cntr-_sage_const_1 ]+denrg\n    for jj in range(_sage_const_0 ,nmov):\n        jjmov = jj + nfix\n        rstor[jj,kk+_sage_const_1 ] = r[jjmov]\n        zstor[jj,kk+_sage_const_1 ] = z[jjmov]' + '\n', '', 'single')
-  File "", line 15, in <module>
-    
-  File "/tmp/tmp6wiGR3/___code___.py", line 144, in find_mutual_inductance
+  File "/tmp/tmpaWWE0L/___code___.py", line 4, in <module>
+    initialize()
+  File "/tmp/tmpeakUYR/___code___.py", line 138, in initialize
+    mfull = find_mutual_inductance(mfull)
+  File "/tmp/tmpeakUYR/___code___.py", line 181, in find_mutual_inductance
     mfullarray[i,j] = dbcoilflux(r[i], z[j]-z[i], r[j]-dr[j], _sage_const_1 )
   File "expression.pyx", line 4361, in sage.symbolic.expression.Expression.__call__ (sage/symbolic/expression.cpp:21618)
   File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/symbolic/callable.py", line 477, in _call_element_
@@ -677,23 +635,20 @@ array([  3.43000000e-02,   3.43000000e-02,   3.43000000e-02,
 }}}
 
 {{{id=35|
-list_plot(coilOutTime[0:372, 0:2])
+list_plot(coilOutTime[0:372, 0:2], color='red')
 ///
 <html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
 
 {{{id=36|
-r
+save_no_move = coilOutTime[0:372, 0:2].copy()
 ///
-array([  3.43000000e-02,   3.43000000e-02,   3.43000000e-02,
-        -4.09221476e+19,   2.99745192e+19,  -1.65404165e+21,
-        -1.65404165e+21,   2.99745192e+19,  -4.09221476e+19])
 }}}
 
 {{{id=40|
-rstor[nfix, 1]
+show(list_plot(save_no_move[0:371, 0:2]) + list_plot(coilOutTime[0:371, 0:2], color = 'red'))
 ///
-0.03120001
+<html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
 
 {{{id=41|
@@ -896,6 +851,32 @@ numpy.where(ptime > 6.00000000e+01)
 }}}
 
 {{{id=51|
+S = sphere(size=.5, color='yellow')
+///
+}}}
+
+{{{id=52|
+show(S)
+///
+}}}
+
+{{{id=53|
+T = Cylindrical('height', ['radius', 'azimuth'])
+r, theta, z = var('r theta z')
+T.transform(radius=r, azimuth=theta, height=z)
+(r*cos(theta), r*sin(theta), z)
+plot3d(9-r^2, (r, 0, 3), (theta, 0, pi), transformation=T, cmap='hsv')
+///
+}}}
+
+{{{id=54|
+from sage.plot.colors import get_cmap
+get_cmap('hsv')
+///
+<matplotlib.colors.LinearSegmentedColormap object at 0xc37eccc>
+}}}
+
+{{{id=55|
 
 ///
 }}}
