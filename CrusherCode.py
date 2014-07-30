@@ -522,9 +522,16 @@ show(St + Tt)
 }}}
 
 {{{id=64|
-crushHe42.coilOutTime[298, 1]
+#Now, let's look at the magnetic field along a constant spherical, not cylindrical 
+#radius as the z goes from 0 to just less than the radius of the coil
+Bzradius(rcoil, z, curren) = dbcoilbz(rcoil, z, rcoil*(1-(z/rcoil)^2)^0.5, curren)
+Hc(z) = 0.760
+Hcoil = plot(Bzradius(2.43e-2, z, 42000), 0.001, 2.42e-2, axes_labels=['$meters$','$kGauss$'], legend_label = '$H radius = 2.43 cm$')
+Hcoil2 = plot(Bzradius(3.43e-2, z, 42000), 0.001, 3.42e-2, axes_labels=['$meters$','$kGauss$'], legend_label = '$H radius = 3.43 cm$')
+Hcritical = plot(Hc(z), 0.001, 3.42e-2, color = 'red',  legend_label = '$Hc Pb$')
+show(Hcoil + Hcoil2 + Hcritical)
 ///
-25.981197750723865
+<html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
 
 {{{id=63|
