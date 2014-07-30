@@ -35,11 +35,11 @@ class Crusher:
     def __init__(self):
 
         #Setup an array for coil dimensions
-        self.r = numpy.array([3.43e-2, 3.43e-2, 3.43e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2], dtype=float)
+        self.r = np.array([3.43e-2, 3.43e-2, 3.43e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2], dtype=float)
     #Here's the array for coil z coordinates
-        self.z = numpy.array([-2.67e-03, 0.0e-00, 2.67e-3,-6.67e-3, -4.0E-3, -1.33E-3, 1.33E-3, 4.0E-3, 6.67E-3], dtype=float)
+        self.z = np.array([-2.67e-03, 0.0e-00, 2.67e-3,-6.67e-3, -4.0E-3, -1.33E-3, 1.33E-3, 4.0E-3, 6.67E-3], dtype=float)
         #Here's the array for coil-can separtion
-        self.dr = numpy.array([1.33E-3, 1.33E-3, 1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3], dtype=float)
+        self.dr = np.array([1.33E-3, 1.33E-3, 1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3], dtype=float)
     
 
 
@@ -63,13 +63,13 @@ class Crusher:
         #for the can and the fixed coil
         #vz is the z velocity, but it looks unused.  It looks like the axial force 
         #implementation was left incomplete in the initial version
-        self.vr = numpy.array([0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
-        self.vz = numpy.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], dtype=float)
+        self.vr = np.array([0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
+        self.vz = np.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], dtype=float)
 
         #NOTE:  r, z, and vr will all be modified by move can
 
         #array stores the temerature of the can under each coil
-        self.temp = numpy.array([293.0, 293.0, 293.0, 293.0, 293.0, 293.0, 293.0], dtype=float)
+        self.temp = np.array([293.0, 293.0, 293.0, 293.0, 293.0, 293.0, 293.0], dtype=float)
 
         #in the following, we'll need the resistances and capacitances that were pulled 
         #from the input data file
@@ -78,23 +78,23 @@ class Crusher:
         #They have been filled in here with the values from the model data file
         #In the model data file, there are 7 values as opposed to the six I expected
         #I need todo check on this
-        self.res = numpy.array([8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
+        self.res = np.array([8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=float)
 
         #Just changed the capacitance to 500 from 50
-        self.cap = numpy.array([0.0004, -1, -1, -1, -1, -1, -1], dtype=float)
+        self.cap = np.array([0.0004, -1, -1, -1, -1, -1, -1], dtype=float)
 
-        self.lckt = numpy.array([0.05, 0, 0, 0, 0, 0, 0], dtype=float)
+        self.lckt = np.array([0.05, 0, 0, 0, 0, 0, 0], dtype=float)
 
-        self.cur = numpy.array([0.0, 0, 0, 0, 0, 0, 0], dtype=float)
-        self.ccur = numpy.array(range(self.nmov+self.nfix), dtype=float)
+        self.cur = np.array([0.0, 0, 0, 0, 0, 0, 0], dtype=float)
+        self.ccur = np.array(range(self.nmov+self.nfix), dtype=float)
 
         #Changed to 3000 from 5000
-        self.V0 = numpy.array([3000.0, 0, 0, 0, 0, 0, 0], dtype=float)
+        self.V0 = np.array([3000.0, 0, 0, 0, 0, 0, 0], dtype=float)
 
         #setup the admittance matrix.  I've made this a single statement here, keep in mind that 
         #there's a there is a loop treatment in the original code
-        self.adc = numpy.array([1/self.cap[0], 0, 0, 0, 0, 0, 0], dtype=float)
-        self.qq = numpy.array([self.V0[0]*self.cap[0], 0, 0, 0, 0, 0, 0], dtype=float)
+        self.adc = np.array([1/self.cap[0], 0, 0, 0, 0, 0, 0], dtype=float)
+        self.qq = np.array([self.V0[0]*self.cap[0], 0, 0, 0, 0, 0, 0], dtype=float)
 
         #Here's a clue to how the radius positions of coil and can should be worked out
         #rcan = r[self.nfix+1]
@@ -116,17 +116,17 @@ class Crusher:
         
         self.movecan = True
 
-        self.coilI = numpy.array(range(self.ntim+1), dtype=float)
-        self.coilOutTime = numpy.array(range((self.ntim+1)*2), dtype=float)
+        self.coilI = np.array(range(self.ntim+1), dtype=float)
+        self.coilOutTime = np.array(range((self.ntim+1)*2), dtype=float)
         self.coilOutTime.shape = (self.ntim+1, 2)
-        self.bzero = numpy.array(range(self.ntim+1), dtype=float)
-        self.zeroline = numpy.array(range(self.ntim+1), dtype=float)
-        self.heatenrg = numpy.array(range(self.ntim+1), dtype=float)
-        self.work = numpy.array(range(self.ntim+1), dtype=float)
-        self.enrgtot = numpy.array(range(self.ntim+1), dtype=float)
+        self.bzero = np.array(range(self.ntim+1), dtype=float)
+        self.zeroline = np.array(range(self.ntim+1), dtype=float)
+        self.heatenrg = np.array(range(self.ntim+1), dtype=float)
+        self.work = np.array(range(self.ntim+1), dtype=float)
+        self.enrgtot = np.array(range(self.ntim+1), dtype=float)
 
         #store the current time in microseconds
-        self.ptime = numpy.array(range(self.ntim+1), dtype=float)
+        self.ptime = np.array(range(self.ntim+1), dtype=float)
         self.denrg = 0.0
         self.dheat = 0.0
         self.dwork = 0.0
@@ -137,10 +137,10 @@ class Crusher:
         self.ntim1 = self.ntim-1
 
         #Here are the arrays that will hold the data from the simulation
-        self.rstor = numpy.array(range(self.nmov*(self.ntim+1)), dtype=float)
+        self.rstor = np.array(range(self.nmov*(self.ntim+1)), dtype=float)
         self.rstor.shape = (self.nmov, self.ntim+1)
 
-        self.zstor = numpy.array(range(self.nmov*(self.ntim+1)), dtype=float)
+        self.zstor = np.array(range(self.nmov*(self.ntim+1)), dtype=float)
         self.zstor.shape = (self.nmov, self.ntim+1)
 
         self.cntr = 0
@@ -163,18 +163,25 @@ class Crusher:
             self.zstor[jj,0] = self.z[jj+self.nfix]
 
         #arrays to hold the reduced mutual inductance matrix
-        self.mm = numpy.array(range((self.nmov+1)^2), dtype=float)
+        self.mm = np.array(range((self.nmov+1)^2), dtype=float)
         self.mm.shape=(self.nmov+1,self.nmov+1)
         self.mmold = self.mm.copy()
         
         #setting up the mutual inductance raw flux array
-        self.mfull = numpy.array(range((self.nmov+self.nfix)*(self.nmov+self.nfix)), dtype=float)
+        self.mfull = np.array(range((self.nmov+self.nfix)*(self.nmov+self.nfix)), dtype=float)
         self.mfull.shape=(self.nmov+self.nfix,self.nmov+self.nfix)
         
         #initialize the raw mutual inductance array
         self.mfull = self.find_mutual_inductance(self.mfull)
 
         self.mm = self.make_reduced_matrix(self.mm, self.mfull)
+
+
+    #Function sets up the intitial temperature of all the movable coils
+    #For now, it set them all to the same temperature
+    def setTemp(self, Temperature):
+        for i in range(0,7):
+            self.temp[i] = Temperature
 
 
     #The mutual inductance array has to be calculated multiple times, so I'm putting 
@@ -202,7 +209,7 @@ class Crusher:
     #since this will need to be called multiple times
     def make_reduced_matrix(self, mreduced, mfullwork):
         self.mmold = self.mm.copy()
-        jmwork = numpy.array(range(self.nmov), dtype=float)
+        jmwork = np.array(range(self.nmov), dtype=float)
         #nt contains the fixed coil portion of the mutual inductance array
         #it's actually just a 
         ntwork = self.mfull[0:(self.nfix), 0:(self.nfix)].copy()
@@ -247,18 +254,18 @@ class Crusher:
         #variable names are copied from the original code
         nc1 = self.nmov+1
         nc11 = self.nmov
-        idot = numpy.array(range(nc1), dtype=float)
+        idot = np.array(range(nc1), dtype=float)
  
-        vv = numpy.array(range(nc1), dtype=float)
+        vv = np.array(range(nc1), dtype=float)
     
         #and here's the rather large array
         #that in fact never gets used for anything in the code, so I'm going to 
         #comment it out.  It does look like it would make a good debug tool though
-        #pcur = numpy.array(range(nc1*ntim), dtype=float)
+        #pcur = np.array(range(nc1*ntim), dtype=float)
         #pcur.shape = (nc1, ntim)
     
-        yp = numpy.array(range(self.ntim), dtype=float)
-        tim = numpy.array(range(self.ntim), dtype=float)
+        yp = np.array(range(self.ntim), dtype=float)
+        tim = np.array(range(self.ntim), dtype=float)
         tim[0] = 0
     
     
@@ -366,8 +373,8 @@ class Crusher:
     def move_can(self):
 
     
-        brg = numpy.array(range(self.nfix + self.nmov), dtype=float)
-        bzt = numpy.array(range(self.nfix + self.nmov), dtype=float)
+        brg = np.array(range(self.nfix + self.nmov), dtype=float)
+        bzt = np.array(range(self.nfix + self.nmov), dtype=float)
     
         for i in range(1,self.nmov+1):
             sbz = 0.0
@@ -420,7 +427,7 @@ class Crusher:
             #if the counter has advanced beyond nchange, then make the time step larger
             if self.cntr >= self.nchange:
                 self.dt = self.ddt*10
-            print self.cntr
+            #print self.cntr
             self.cntr = self.cntr + 1
             self.time = self.time + self.dt
             #store the current time in microseconds
@@ -435,8 +442,8 @@ class Crusher:
 
             self.mm = self.make_reduced_matrix(self.mm, self.mfull)
             #now, finally, the first new simulation step, compute the currents
-            print "Time in microseconds"
-            print self.ptime[self.cntr]
+            #print "Time in microseconds"
+            #print self.ptime[self.cntr]
             self.compute_current()
             if self.movecan:
                 self.move_can()
@@ -479,150 +486,64 @@ class Crusher:
 ///
 }}}
 
-{{{id=57|
-#Cool, now, create an object
-nm_crushtest = Crusher()
-nm_crushtest.set_movecan(False)
-nm_crushtest.simulate(372)
-
-crushtest = Crusher()
-crushtest.simulate(372)
+{{{id=64|
+crushHe42 = Crusher()
+crushHe42.setTemp(4.2)
+crushHe42.simulate(298)
+list_plot(crushHe42.coilOutTime[0:298, 0:2], color='blue')
 ///
-WARNING: Output truncated!  
-<html><a target='_new' href='/home/admin/4/cells/57/full_output.txt' class='file_link'>full_output.txt</a></html>
-
-
-
-0
-Time in microseconds
-0.02
-1
-Time in microseconds
-0.04
-2
-Time in microseconds
-0.06
-3
-Time in microseconds
-0.08
-4
-Time in microseconds
-0.1
-5
-Time in microseconds
-0.12
-6
-Time in microseconds
-0.14
-7
-Time in microseconds
-0.16
-8
-Time in microseconds
-0.18
-9
-Time in microseconds
-0.2
-10
-Time in microseconds
-0.22
-11
-Time in microseconds
-0.24
-12
-Time in microseconds
-0.26
-13
-Time in microseconds
-0.28
-14
-Time in microseconds
-0.3
-15
-Time in microseconds
-0.32
-16
-Time in microseconds
-0.34
-17
-Time in microseconds
-0.36
-18
-Time in microseconds
-0.38
-19
-Time in microseconds
-
-...
-
-352
-Time in microseconds
-67.0
-353
-Time in microseconds
-67.2
-354
-Time in microseconds
-67.4
-355
-Time in microseconds
-67.6
-356
-Time in microseconds
-67.8
-357
-Time in microseconds
-68.0
-358
-Time in microseconds
-68.2
-359
-Time in microseconds
-68.4
-360
-Time in microseconds
-68.6
-361
-Time in microseconds
-68.8
-362
-Time in microseconds
-69.0
-363
-Time in microseconds
-69.2
-364
-Time in microseconds
-69.4
-365
-Time in microseconds
-69.6
-366
-Time in microseconds
-69.8
-367
-Time in microseconds
-70.0
-368
-Time in microseconds
-70.2
-369
-Time in microseconds
-70.4
-370
-Time in microseconds
-70.6
-371
-Time in microseconds
-70.8
+<html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
 
-{{{id=34|
+{{{id=63|
+#The following will hopefully keep me from having to retype the object name 
+#every time it changes
+gr = crushHe42
+
+show(list_plot(gr.rstor[0:gr.nmov, 1], plotjoined=True) + list_plot(gr.rstor[0:gr.nmov, 77], plotjoined=True) + list_plot(gr.rstor[0:gr.nmov, 138], plotjoined=True) + list_plot(gr.rstor[0:gr.nmov, 198], plotjoined=True) + list_plot(gr.rstor[0:crushtest.nmov, 258], plotjoined=True) )
+///
+<html><font color='black'><img src='cell://sage0.png'></font></html>
+}}}
+
+{{{id=65|
+#Cool, now, create an object
+#nm_crushtest = Crusher()
+#nm_crushtest.set_movecan(False)
+#nm_crushtest.simulate(372)
+
+crushtest = Crusher()
+crushtest.simulate(298)
+///
+}}}
+
+{{{id=57|
+S = list_plot(crushHe42.coilOutTime[0:298, 0:2], axes_labels=['$\mu Seconds$','$kA$'], color='blue', legend_label = '$4.2 K$')
+T = list_plot(crushtest.coilOutTime[0:298, 0:2], color='red',  legend_label = '$293 K$')
+show(S + T)
+///
+<html><font color='black'><img src='cell://sage0.png'></font></html>
+}}}
+
+{{{id=61|
 nomove = list_plot(nm_crushtest.coilOutTime[0:372, 0:2], color='red')
 move = list_plot(crushtest.coilOutTime[0:372, 0:2], color='blue')
 show(nomove + move)
 ///
 <html><font color='black'><img src='cell://sage0.png'></font></html>
+}}}
+
+{{{id=62|
+#Run a simulation up to 193 steps,(about 3.5 uSeconds), and map the z = 0 magnetic field
+magtest = Crusher()
+magtest.simulate(372)
+///
+}}}
+
+{{{id=34|
+#magnet mapping code for peak current
+#create a loop to walk around the circumference of the can and call dbcoilbz
+#Load the results into an array with one result and two coordinates
+///
 }}}
 
 {{{id=60|
@@ -681,345 +602,8 @@ plot(dbcoilflux(2, 0, rc, 1), 0.01, 2)
 }}}
 
 {{{id=39|
-import numpy as np
-#getting started on the compute_current function
-def compute_current():
-    global qq
-    global adc
-    global cur
-    global coilI
-    global cntr
-    global denrg
-    global zeroline
-    global z
-    global r
-    global dheat
-    global temp
-    global ptime
-    global ccur
-    #first, we'll need some working arrays
-    for i in range(0,nfix):
-        ccur[i] = cur[0]
-    for i in range(nfix,nfix+nmov):
-        ccur[i] = cur[i-nfix+1]
-    
-    #variable names are copied from the original code
-    nc1 = nmov+1
-    nc11 = nmov
-    idot = numpy.array(range(nc1), dtype=float)
- 
-    vv = numpy.array(range(nc1), dtype=float)
-    
-    #and here's the rather large array
-    #that in fact never gets used for anything in the code, so I'm going to 
-    #comment it out.  It does look like it would make a good debug tool though
-    #pcur = numpy.array(range(nc1*ntim), dtype=float)
-    #pcur.shape = (nc1, ntim)
-    
-    yp = numpy.array(range(ntim), dtype=float)
-    tim = numpy.array(range(ntim), dtype=float)
-    tim[0] = 0
-    
-    
-    #add the external inductance into the reduced mutual inductance array
-    for i in range(0, nmov+1):
-        mm[i,i] = mm[i,i]+lckt[i]
-    
-    
-    #NOTE:  Here's why we left a copy of the original mm hanging around in mmold
-    dmmdt = (mm-mmold)/dt
-    
-    #make a copy of mm
-    mident = mm.copy
-    
-    #now, invert mm
-    minv = inv(mm)
-    
-    #make the inverse symmetric
-    for i in range(0, nmov):
-        for j in range(i+1, nmov+1):
-            minv[i,j] = (minv[i,j]+minv[j,i])/2.0
-            minv[j,i] = minv[i,j]
-            
-    #now compute the currents in the coils
-    #the following is an operation on matrices, but appears not to be a matrix multiply
-    #which would be denoted in IDL by #  I'm guessing it just multiplies element by element
-    #eyer looks like a voltage
-    eyer = cur*res
-    #print "Here's cur"
-    #print cur
-    #print "Here's res"
-    #print res
-    #c = q/v so quec looks like a voltage
-    quec = qq*adc
-    #print "Here's qq"
-    #print qq
-    #print "Here's adc"
-    #print adc
-    #The following actually is a matrix multiply
-    #it's cute because it's not l*di/dt
-    idldt = np.dot(dmmdt, cur)
-    
-    #Make the arrays symmetric as usual
-    for i in range(1, (nmov/2)+1):
-        iii=nmov+1-i
-        eyer[i]=(eyer[i]+eyer[iii])/2.0  
-        eyer[iii]=eyer[i]
-        quec[i]=(quec[i]+quec[iii])/2.0  
-        quec[iii]=quec[i]
-        idldt[i]=(idldt[i]+idldt[iii])/2.0  
-        idldt[iii]=idldt[i]
-        
-    #voltage drop due to the admittance, (although, seems to be just cancelling the 
-    #capacitance back out
-    #minus the resistive voltage drop minus the inductive voltage drop
-    #keep in mind that each argument is an array
-    vv=quec-eyer-idldt
-    #print "Here's quec"
-    #print quec
-    #print "Here's eyer"
-    #print eyer
-    #print "Here's idldt"
-    #print idldt
-    #print "Here's vv"
-    #print vv
-    #print "Here's minv"
-    #print minv
-    
-    #what is this for?
-    idot=np.dot(minv, vv)
-    
-    #Looks like we're making idot symmetric as well
-    for i in range(1, (nmov/2)+1):
-        iii=nmov+1-i
-        idot[i]=(idot[i]+idot[iii])/2 
-        idot[iii]=idot[i]
-        
-    #This is an array operation
-    cur=cur+idot*dt
-    
-    qq=qq-adc*cap*cur*dt
-    coilI[cntr]=cur[0] 
-    coilOutTime[cntr,0]= ptime[cntr]
-    coilOutTime[cntr,1] = cur[0]
-    
-    denrg=(cur[0]*qq[0]*dt)/cap[0]
-    
-    zeroline[cntr]=0.0
-    
-    #this variable is actually local!
-    sbz = 0.0
-    
-    for j in range(0, nfix+nmov):
-        zz = z[j]
-        rr = 0.0
-        rso = r[j]
-        curr = 1e3*ccur[j]
-        #implement the portion of dbcoil that returns bz
-        sbz = sbz + dbcoilbzrzero(rso, zz, rr, curr)
-        #sbz = sbz + bz
-        
-    #This is the field in kGauss
-    bzero[cntr] = 10*sbz
-    tms = 1e3*time
-    
-    #Calculate the heat
-    dheat = 0.0
-    for i in range(1, nmov+1):
-        tt=temp[i]
-        sig = specheat(tt)
-        enrg = cur[i]^2*res[i]*dt
-        dheat = dheat + enrg
-        dtemp = dheat/(sig*mass)
-        temp[i] = temp[i] + dtemp
-        tt = temp[i]
-        rho = rstvty(tt)
-        #Cool!  Updating the resistance based on the temperature change
-        #in the can
-        res[i] = 1e3*rho*2*pi*rcan/(thickness*delta)
-        
-        
-    
-    
-    #testing
-    #return cur
+
 ///
-}}}
-
-{{{id=26|
-#This is the move_can function
-#It returns the radial velocity of the can
-
-def move_can():
-    global z
-    global r
-    global ccur
-    global dt
-    global dwork
-    
-    brg = numpy.array(range(nfix + nmov), dtype=float)
-    bzt = numpy.array(range(nfix + nmov), dtype=float)
-    
-    for i in range(1,nmov+1):
-        sbz = 0.0
-        imov = nfix + i - 1
-        for j in range(0,nfix+nmov):
-            if j==imov:
-                 break
-            zz = z[imov]-z[j]
-            rr = r[imov]
-            rso = r[j]
-            curr = 1e3*ccur[j]
-            #if rr is zero, the can has broken in half and all bets are off anyway           
-            #if rr == 0:
-            #    sbz = sbz + dbcoilbzrzero(rso, zz, rr, curr)
-            #else:
-            sbz = sbz + dbcoilbz(rso, zz, rr, curr)
-                
-        bzt[i+nfix-1] = sbz
-    dwork = 0.0
-    #print "nmov"
-    #print nmov
-    for i in range(1,(nmov/2)+1):
-        #This looks like we're hitting opposite edges of the moving coils, the can, and 
-        #working towards the center
-        #print "i"
-        #print i
-        ii=nfix+i-1
-        iii = (nfix + nmov) - i
-        
-        #Find force in kNewtons
-        forcer = bzt[ii]*ccur[ii]*2*pi*r[ii]
-        
-        #Get the differential in velocity from the force and mass
-        dvr = forcer*dt/mass
-        vrnew = vr[ii]+dvr
-        
-        #get the new r position using the velocity
-        rnew=r[ii]+vr[ii]*1e-3*dt
-        #print "rii"
-        #print r[ii]
-        #print "vrii"
-        #print vr[ii]
-        #print"dt"
-        #print dt
-        
-        #Find work in Joules
-        dwork=dwork+2*forcer*vrnew*dt
-        vr[ii]=vrnew
-        r[ii] = rnew
-        vr[iii]=vrnew
-        r[iii]=rnew
-    #print "completed loop"
-///
-}}}
-
-{{{id=13|
-#The simulation code lives in this cell
-#Initialize the code
-initialize()
-
-#currently, the full time range takes a while with ntim
-#for kk in range(0,ntim):
-
-for kk in range(0,599):
-    #if the counter has advanced beyond nchange, then make the time step larger
-    if cntr >= nchange:
-        dt = ddt*10
-    print cntr
-    cntr = cntr + 1
-    time = time + dt
-    #store the current time in microseconds
-    ptime[cntr] = time*1e3
-    
-    #Even those these funcitons have been called in initialize, it's important to call them even on 
-    #the first loop through here.  Otherwise, mmold winds up with junk in it.
-    #now, find the mutual inductance
-    global mfull
-    mfull = find_mutual_inductance(mfull)
-    #then, reduce the mutual inductance array again
-    global mm
-    mm = make_reduced_matrix(mm, mfull)
-    #now, finally, the first new simulation step, compute the currents
-    print "Time in microseconds"
-    print ptime[cntr]
-    compute_current()
-    move_can()
-    
-    #track the heat and work for this step
-    heatenrg[cntr]=heatenrg[cntr+1]+dheat
-    work[cntr]=work[cntr-1]+dwork
-    enrgtot[cntr]=enrgtot[cntr-1]+denrg
-    for jj in range(0,nmov):
-        jjmov = jj + nfix
-        rstor[jj,kk+1] = r[jjmov]
-        zstor[jj,kk+1] = z[jjmov]
-///
-Traceback (most recent call last):    
-  File "", line 1, in <module>
-    
-  File "/tmp/tmpaWWE0L/___code___.py", line 4, in <module>
-    initialize()
-  File "/tmp/tmpeakUYR/___code___.py", line 138, in initialize
-    mfull = find_mutual_inductance(mfull)
-  File "/tmp/tmpeakUYR/___code___.py", line 181, in find_mutual_inductance
-    mfullarray[i,j] = dbcoilflux(r[i], z[j]-z[i], r[j]-dr[j], _sage_const_1 )
-  File "expression.pyx", line 4361, in sage.symbolic.expression.Expression.__call__ (sage/symbolic/expression.cpp:21618)
-  File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/symbolic/callable.py", line 477, in _call_element_
-    return SR(_the_element.substitute(**d))
-  File "expression.pyx", line 4212, in sage.symbolic.expression.Expression.substitute (sage/symbolic/expression.cpp:20868)
-  File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/functions/special.py", line 505, in _eval_
-    if self.name() in repr(s):
-  File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/interfaces/maxima_abstract.py", line 1427, in __repr__
-    r = P.get(self._name)
-  File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/interfaces/maxima_lib.py", line 525, in get
-    s = self.eval('%s;'%var)
-  File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/interfaces/maxima_lib.py", line 423, in _eval_line
-    if statement: result = ((result + '\n') if result else '') + max_to_string(maxima_eval("#$%s$"%statement))
-  File "/home/sage/sage-6.2/local/lib/python2.7/site-packages/sage/interfaces/maxima_lib.py", line 260, in max_to_string
-    return maxprint(s).python()[1:-1]
-  File "ecl.pyx", line 784, in sage.libs.ecl.EclObject.__call__ (sage/libs/ecl.c:6640)
-  File "ecl.pyx", line 355, in sage.libs.ecl.ecl_safe_apply (sage/libs/ecl.c:4528)
-  File "c_lib.pyx", line 89, in sage.ext.c_lib.sig_raise_exception (sage/ext/c_lib.c:1094)
-FloatingPointError: Floating point exception
-}}}
-
-{{{id=38|
-r
-///
-array([  3.43000000e-02,   3.43000000e-02,   3.43000000e-02,
-        -4.09642510e+19,   3.00055899e+19,  -1.65575866e+21,
-        -1.65575866e+21,   3.00055899e+19,  -4.09642510e+19])
-}}}
-
-{{{id=35|
-list_plot(coilOutTime[0:372, 0:2], color='red')
-///
-<html><font color='black'><img src='cell://sage0.png'></font></html>
-}}}
-
-{{{id=36|
-save_no_move = coilOutTime[0:372, 0:2].copy()
-///
-}}}
-
-{{{id=40|
-show(list_plot(save_no_move[0:371, 0:2]) + list_plot(coilOutTime[0:371, 0:2], color = 'red'))
-///
-<html><font color='black'><img src='cell://sage0.png'></font></html>
-}}}
-
-{{{id=41|
-rstor[0:nmov, 1]
-///
-array([ 0.03120001,  0.03120001,  0.03120001,  0.03120001,  0.03120001,
-        0.03120001])
-}}}
-
-{{{id=42|
-show(list_plot(rstor[0:nmov, 1], plotjoined=True) + list_plot(rstor[0:nmov, 77], plotjoined=True) + list_plot(rstor[0:nmov, 138], plotjoined=True) + list_plot(rstor[0:nmov, 198], plotjoined=True) + list_plot(rstor[0:nmov, 258], plotjoined=True) + list_plot(rstor[0:nmov, 318], plotjoined=True) + list_plot(rstor[0:nmov, 372], plotjoined=True))
-///
-<html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
 
 {{{id=43|
@@ -1047,138 +631,6 @@ array([ 0.01660943,  0.00882953,  0.00515049,  0.00515049,  0.00882953,
 rstor[0:nmov, 119]
 ///
 array([  119.,   720.,  1321.,  1922.,  2523.,  3124.])
-}}}
-
-{{{id=48|
-ptime
-///
-WARNING: Output truncated!  
-<html><a target='_new' href='/home/admin/4/cells/48/full_output.txt' class='file_link'>full_output.txt</a></html>
-
-
-
-array([  0.00000000e+00,   2.00000000e-02,   4.00000000e-02,
-         6.00000000e-02,   8.00000000e-02,   1.00000000e-01,
-         1.20000000e-01,   1.40000000e-01,   1.60000000e-01,
-         1.80000000e-01,   2.00000000e-01,   2.20000000e-01,
-         2.40000000e-01,   2.60000000e-01,   2.80000000e-01,
-         3.00000000e-01,   3.20000000e-01,   3.40000000e-01,
-         3.60000000e-01,   3.80000000e-01,   4.00000000e-01,
-         6.00000000e-01,   8.00000000e-01,   1.00000000e+00,
-         1.20000000e+00,   1.40000000e+00,   1.60000000e+00,
-         1.80000000e+00,   2.00000000e+00,   2.20000000e+00,
-         2.40000000e+00,   2.60000000e+00,   2.80000000e+00,
-         3.00000000e+00,   3.20000000e+00,   3.40000000e+00,
-         3.60000000e+00,   3.80000000e+00,   4.00000000e+00,
-         4.20000000e+00,   4.40000000e+00,   4.60000000e+00,
-         4.80000000e+00,   5.00000000e+00,   5.20000000e+00,
-         5.40000000e+00,   5.60000000e+00,   5.80000000e+00,
-         6.00000000e+00,   6.20000000e+00,   6.40000000e+00,
-         6.60000000e+00,   6.80000000e+00,   7.00000000e+00,
-         7.20000000e+00,   7.40000000e+00,   7.60000000e+00,
-         7.80000000e+00,   8.00000000e+00,   8.20000000e+00,
-         8.40000000e+00,   8.60000000e+00,   8.80000000e+00,
-         9.00000000e+00,   9.20000000e+00,   9.40000000e+00,
-         9.60000000e+00,   9.80000000e+00,   1.00000000e+01,
-         1.02000000e+01,   1.04000000e+01,   1.06000000e+01,
-         1.08000000e+01,   1.10000000e+01,   1.12000000e+01,
-         1.14000000e+01,   1.16000000e+01,   1.18000000e+01,
-         1.20000000e+01,   1.22000000e+01,   1.24000000e+01,
-         1.26000000e+01,   1.28000000e+01,   1.30000000e+01,
-         1.32000000e+01,   1.34000000e+01,   1.36000000e+01,
-         1.38000000e+01,   1.40000000e+01,   1.42000000e+01,
-         1.44000000e+01,   1.46000000e+01,   1.48000000e+01,
-         1.50000000e+01,   1.52000000e+01,   1.54000000e+01,
-         1.56000000e+01,   1.58000000e+01,   1.60000000e+01,
-         1.62000000e+01,   1.64000000e+01,   1.66000000e+01,
-         1.68000000e+01,   1.70000000e+01,   1.72000000e+01,
-         1.74000000e+01,   1.76000000e+01,   1.78000000e+01,
-         1.80000000e+01,   1.82000000e+01,   1.84000000e+01,
-         1.86000000e+01,   1.88000000e+01,   1.90000000e+01,
-         1.92000000e+01,   1.94000000e+01,   1.96000000e+01,
-         1.98000000e+01,   2.00000000e+01,   2.02000000e+01,
-         2.04000000e+01,   2.06000000e+01,   2.08000000e+01,
-         2.10000000e+01,   2.12000000e+01,   2.14000000e+01,
-         2.16000000e+01,   2.18000000e+01,   2.20000000e+01,
-         2.22000000e+01,   2.24000000e+01,   2.26000000e+01,
-         2.28000000e+01,   2.30000000e+01,   2.32000000e+01,
-         2.34000000e+01,   2.36000000e+01,   2.38000000e+01,
-         2.40000000e+01,   2.42000000e+01,   2.44000000e+01,
-         2.46000000e+01,   2.48000000e+01,   2.50000000e+01,
-         2.52000000e+01,   2.54000000e+01,   2.56000000e+01,
-         2.58000000e+01,   2.60000000e+01,   2.62000000e+01,
-         2.64000000e+01,   2.66000000e+01,   2.68000000e+01,
-         2.70000000e+01,   2.72000000e+01,   2.74000000e+01,
-         2.76000000e+01,   2.78000000e+01,   2.80000000e+01,
-         2.82000000e+01,   2.84000000e+01,   2.86000000e+01,
-         2.88000000e+01,   2.90000000e+01,   2.92000000e+01,
-         2.94000000e+01,   2.96000000e+01,   2.98000000e+01,
-         3.00000000e+01,   3.02000000e+01,   3.04000000e+01,
-         3.06000000e+01,   3.08000000e+01,   3.10000000e+01,
-         3.12000000e+01,   3.14000000e+01,   3.16000000e+01,
-
-...
-
-         4.23000000e+02,   4.24000000e+02,   4.25000000e+02,
-         4.26000000e+02,   4.27000000e+02,   4.28000000e+02,
-         4.29000000e+02,   4.30000000e+02,   4.31000000e+02,
-         4.32000000e+02,   4.33000000e+02,   4.34000000e+02,
-         4.35000000e+02,   4.36000000e+02,   4.37000000e+02,
-         4.38000000e+02,   4.39000000e+02,   4.40000000e+02,
-         4.41000000e+02,   4.42000000e+02,   4.43000000e+02,
-         4.44000000e+02,   4.45000000e+02,   4.46000000e+02,
-         4.47000000e+02,   4.48000000e+02,   4.49000000e+02,
-         4.50000000e+02,   4.51000000e+02,   4.52000000e+02,
-         4.53000000e+02,   4.54000000e+02,   4.55000000e+02,
-         4.56000000e+02,   4.57000000e+02,   4.58000000e+02,
-         4.59000000e+02,   4.60000000e+02,   4.61000000e+02,
-         4.62000000e+02,   4.63000000e+02,   4.64000000e+02,
-         4.65000000e+02,   4.66000000e+02,   4.67000000e+02,
-         4.68000000e+02,   4.69000000e+02,   4.70000000e+02,
-         4.71000000e+02,   4.72000000e+02,   4.73000000e+02,
-         4.74000000e+02,   4.75000000e+02,   4.76000000e+02,
-         4.77000000e+02,   4.78000000e+02,   4.79000000e+02,
-         4.80000000e+02,   4.81000000e+02,   4.82000000e+02,
-         4.83000000e+02,   4.84000000e+02,   4.85000000e+02,
-         4.86000000e+02,   4.87000000e+02,   4.88000000e+02,
-         4.89000000e+02,   4.90000000e+02,   4.91000000e+02,
-         4.92000000e+02,   4.93000000e+02,   4.94000000e+02,
-         4.95000000e+02,   4.96000000e+02,   4.97000000e+02,
-         4.98000000e+02,   4.99000000e+02,   5.00000000e+02,
-         5.01000000e+02,   5.02000000e+02,   5.03000000e+02,
-         5.04000000e+02,   5.05000000e+02,   5.06000000e+02,
-         5.07000000e+02,   5.08000000e+02,   5.09000000e+02,
-         5.10000000e+02,   5.11000000e+02,   5.12000000e+02,
-         5.13000000e+02,   5.14000000e+02,   5.15000000e+02,
-         5.16000000e+02,   5.17000000e+02,   5.18000000e+02,
-         5.19000000e+02,   5.20000000e+02,   5.21000000e+02,
-         5.22000000e+02,   5.23000000e+02,   5.24000000e+02,
-         5.25000000e+02,   5.26000000e+02,   5.27000000e+02,
-         5.28000000e+02,   5.29000000e+02,   5.30000000e+02,
-         5.31000000e+02,   5.32000000e+02,   5.33000000e+02,
-         5.34000000e+02,   5.35000000e+02,   5.36000000e+02,
-         5.37000000e+02,   5.38000000e+02,   5.39000000e+02,
-         5.40000000e+02,   5.41000000e+02,   5.42000000e+02,
-         5.43000000e+02,   5.44000000e+02,   5.45000000e+02,
-         5.46000000e+02,   5.47000000e+02,   5.48000000e+02,
-         5.49000000e+02,   5.50000000e+02,   5.51000000e+02,
-         5.52000000e+02,   5.53000000e+02,   5.54000000e+02,
-         5.55000000e+02,   5.56000000e+02,   5.57000000e+02,
-         5.58000000e+02,   5.59000000e+02,   5.60000000e+02,
-         5.61000000e+02,   5.62000000e+02,   5.63000000e+02,
-         5.64000000e+02,   5.65000000e+02,   5.66000000e+02,
-         5.67000000e+02,   5.68000000e+02,   5.69000000e+02,
-         5.70000000e+02,   5.71000000e+02,   5.72000000e+02,
-         5.73000000e+02,   5.74000000e+02,   5.75000000e+02,
-         5.76000000e+02,   5.77000000e+02,   5.78000000e+02,
-         5.79000000e+02,   5.80000000e+02,   5.81000000e+02,
-         5.82000000e+02,   5.83000000e+02,   5.84000000e+02,
-         5.85000000e+02,   5.86000000e+02,   5.87000000e+02,
-         5.88000000e+02,   5.89000000e+02,   5.90000000e+02,
-         5.91000000e+02,   5.92000000e+02,   5.93000000e+02,
-         5.94000000e+02,   5.95000000e+02,   5.96000000e+02,
-         5.97000000e+02,   5.98000000e+02,   5.99000000e+02,
-         6.00000000e+02])
 }}}
 
 {{{id=50|
