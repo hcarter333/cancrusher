@@ -119,6 +119,8 @@ class Crusher:
         self.coilI = np.array(range(self.ntim+1), dtype=float)
         self.coilOutTime = np.array(range((self.ntim+1)*2), dtype=float)
         self.coilOutTime.shape = (self.ntim+1, 2)
+        self.coilOutTemp= np.array(range((self.ntim+1)*2), dtype=float)
+        self.coilOutTemp.shape = (self.ntim+1, 2)
         self.bzero = np.array(range(self.ntim+1), dtype=float)
         self.zeroline = np.array(range(self.ntim+1), dtype=float)
         self.heatenrg = np.array(range(self.ntim+1), dtype=float)
@@ -357,6 +359,7 @@ class Crusher:
     
         #Calculate the heat
         dheat = 0.0
+        maxtemp = 0.0
         for i in range(1, self.nmov+1):
             tt=self.temp[i]
             sig = specheat(tt)
@@ -364,6 +367,17 @@ class Crusher:
             dheat = dheat + enrg
             dtemp = dheat/(sig*self.mass)
             self.temp[i] = self.temp[i] + dtemp
+            
+            #store the temp at each time
+            #coilOutTemp
+            #the implementatin is rather flawed, the ...
+            #just fix it I suppose
+            #Now, the maximum temperature at each time step is tracked
+            if self.temp[i] > maxtemp:
+                maxtemp = self.temp[i]
+                self.coilOutTemp[self.cntr,0]= self.ptime[self.cntr]
+                self.coilOutTemp[self.cntr,1] = maxtemp
+            
             tt = self.temp[i]
             rho = rstvty(tt)
             #Cool!  Updating the resistance based on the temperature change
@@ -486,13 +500,31 @@ class Crusher:
 ///
 }}}
 
-{{{id=64|
+{{{id=66|
+#This simulation compares the crusher currents and temperatures at room temp to 4.2 K
 crushHe42 = Crusher()
 crushHe42.setTemp(4.2)
 crushHe42.simulate(298)
-list_plot(crushHe42.coilOutTime[0:298, 0:2], color='blue')
+Sc = list_plot(crushHe42.coilOutTime[0:298, 0:2], axes_labels=['$\mu Seconds$','$kA$'], color='blue', legend_label = '$4.2 K$')
+
+crushtest = Crusher()
+crushtest.simulate(298)
+Tc = list_plot(crushtest.coilOutTime[0:298, 0:2], color='red',  legend_label = '$293 K$')
+show(Sc + Tc)
+
+#Now plot the maximum temperatures of the can in each case
+St = list_plot(crushHe42.coilOutTemp[0:298, 0:2], axes_labels=['$\mu Seconds$','$degrees K$'], color='blue', legend_label = '$4.2 K$')
+Tt = list_plot(crushtest.coilOutTemp[0:298, 0:2], color='red',  legend_label = '$293 K$')
+show(St + Tt)
 ///
 <html><font color='black'><img src='cell://sage0.png'></font></html>
+<html><font color='black'><img src='cell://sage1.png'></font></html>
+}}}
+
+{{{id=64|
+crushHe42.coilOutTime[298, 1]
+///
+25.981197750723865
 }}}
 
 {{{id=63|
