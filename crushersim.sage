@@ -5,7 +5,9 @@ perm0 = 1.25663706*1e-6
 
 
 #Simple Sage objects that live outside the class for now
-rstvty(temperature)=(4.5+1.133*10^-2*temperature)*10^-8
+#Moved to object
+#rstvty(temperature)=(4.5+1.133*10^-2*temperature)*10^-8
+
 #Returns the specific heat in J/Kg/K
 specheat(temperature) = 4.18*(0.16+1.5e-4*temperature)*1000.0    
 
@@ -30,20 +32,24 @@ global mfull
 
 class Crusher:
 
+    def rstvty(self, Temperature):
+        if self.superconduct == False:
+            return (4.5+1.133*10^-2*Temperature)*10^-8
+        
+        return 0
+        
     def __init__(self):
 
+        #Make driven coil superconducting
+        self.superconduct = False
+        
         #Setup an array for coil dimensions
         self.r = np.array([3.43e-2, 3.43e-2, 3.43e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2], dtype=float)
-    #Here's the array for coil z coordinates
+        #Here's the array for coil z coordinates
         self.z = np.array([-2.67e-03, 0.0e-00, 2.67e-3,-6.67e-3, -4.0E-3, -1.33E-3, 1.33E-3, 4.0E-3, 6.67E-3], dtype=float)
         #Here's the array for coil-can separtion?
         self.dr = np.array([1.33E-3, 1.33E-3, 1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3], dtype=float)
     
-
-
-
-
-
         #setup the constants
         self.nmov = 6
         self.nfix = 3
@@ -104,7 +110,7 @@ class Crusher:
         #This begins to make more sense after a fahion.  The one bigger is intentional, the 
         #first value in the data file was real, all the others are filled in
         for i in range(1, self.nmov+1):
-            self.res[i] = 1e3*2*pi*self.rcan*rstvty(self.temp[i])/(self.thickness*self.delta)
+            self.res[i] = 1e3*2*pi*self.rcan*self.rstvty(self.temp[i])/(self.thickness*self.delta)
 
 
         #now setup the variables for stepping through the simulation
@@ -189,6 +195,9 @@ class Crusher:
         self.r[8] = bigr-.31e-2
         
     
+    def setSuperconduct(self, Superconduct):
+        self.superconduct = Superconduct
+    
     #Function sets up the intitial temperature of all the movable coils
     #For now, it set them all to the same temperature
     def setTemp(self, Temperature):
@@ -199,6 +208,8 @@ class Crusher:
     #Set the initial voltage on the capacitor
     def setVnought(self, Voltage):
         self.V0[0] = Voltage
+        #Now that the voltage is reset, make sure it effects the capacitor bank
+        self.qq =[self.V0[0]*self.cap[0], 0, 0, 0, 0, 0, 0]
     
     #The mutual inductance array has to be calculated multiple times, so I'm putting 
     #it into a Python funcion, (I hope)
@@ -393,7 +404,7 @@ class Crusher:
                 self.coilOutTemp[self.cntr,1] = maxtemp
             
             tt = self.temp[i]
-            rho = rstvty(tt)
+            rho = self.rstvty(tt)
             #Cool!  Updating the resistance based on the temperature change
             #in the can
             self.res[i] = 1e3*rho*2*pi*self.rcan/(self.thickness*self.delta)
