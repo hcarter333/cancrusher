@@ -38,7 +38,7 @@ class Crusher:
         self.r = np.array([3.43e-2, 3.43e-2, 3.43e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2, 3.12e-2], dtype=float)
     #Here's the array for coil z coordinates
         self.z = np.array([-2.67e-03, 0.0e-00, 2.67e-3,-6.67e-3, -4.0E-3, -1.33E-3, 1.33E-3, 4.0E-3, 6.67E-3], dtype=float)
-        #Here's the array for coil-can separtion
+        #Here's the array for coil-can separtion?
         self.dr = np.array([1.33E-3, 1.33E-3, 1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3, -1.33E-3], dtype=float)
     
 
@@ -178,7 +178,19 @@ class Crusher:
 
         self.mm = self.make_reduced_matrix(self.mm, self.mfull)
 
-
+    #Function to change the radius of the sample
+    def setr(self, bigr):
+        self.r[0] = bigr
+        self.r[1] = bigr
+        self.r[2] = bigr
+        self.r[3] = bigr-.31e-2
+        self.r[4] = bigr-.31e-2
+        self.r[5] = bigr-.31e-2
+        self.r[6] = bigr-.31e-2
+        self.r[7] = bigr-.31e-2
+        self.r[8] = bigr-.31e-2
+        
+    
     #Function sets up the intitial temperature of all the movable coils
     #For now, it set them all to the same temperature
     def setTemp(self, Temperature):
@@ -498,6 +510,56 @@ class Crusher:
 #First, let's see if it reads in ok
 #initialize()
 ///
+}}}
+
+{{{id=67|
+#This simulation checks that setr doesn't break anything
+#passes as of 2014/7/30 16:31 CST
+crushR = Crusher()
+crushR.setr(3.43e-2)
+crushR.simulate(298)
+Sc = list_plot(crushR.coilOutTime[0:298, 0:2], axes_labels=['$\mu Seconds$','$kA$'], color='blue', legend_label = '$4.2 K$')
+
+crush_old_r = Crusher()
+crush_old_r.simulate(298)
+#The currents should overlay each other
+Tc = list_plot(crush_old_r.coilOutTime[0:298, 0:2], color='red',  legend_label = '$293 K$')
+show(Sc + Tc)
+///
+<html><font color='black'><img src='cell://sage0.png'></font></html>
+}}}
+
+{{{id=69|
+#Now, simulate the current for both radii
+#This simulation checks that setr doesn't break anything
+#passes as of 2014/7/30 16:31 CST
+crushBig = Crusher()
+crushBig.setr(4.445e-2)
+crushBig.simulate(298)
+Sc = list_plot(crushBig.coilOutTime[0:298, 0:2], axes_labels=['$\mu Seconds$','$kA$'], color='blue', legend_label = '$r=4.445cm$')
+
+crushSmall = Crusher()
+crushSmall.setr(1.9055e-2)
+crushSmall.simulate(298)
+#The currents should overlay each other
+Tc = list_plot(crushSmall.coilOutTime[0:298, 0:2], color='red',  legend_label = '$r=1.9055cm$')
+show(Sc + Tc)
+///
+<html><font color='black'><img src='cell://sage0.png'></font></html>
+}}}
+
+{{{id=68|
+#Experiment to find the maximum current without having to add additional simulation code
+#crushR.coilOutTime
+np.amax(crushBig.coilOutTime[0:298, 1])
+///
+37.544627670962271
+}}}
+
+{{{id=70|
+np.amax(crushSmall.coilOutTime[0:298, 1])
+///
+65.608564112692591
 }}}
 
 {{{id=66|
