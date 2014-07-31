@@ -562,6 +562,58 @@ np.amax(crushSmall.coilOutTime[0:298, 1])
 65.608564112692591
 }}}
 
+{{{id=71|
+#Now, simulate the current for both radii
+#This simulation checks that setr doesn't break anything
+#passes as of 2014/7/30 16:31 CST
+crushBig = Crusher()
+crushBig.setr(4.445e-2)
+crushBig.setTemp(4.2)
+crushBig.simulate(298)
+Sc = list_plot(crushBig.coilOutTime[0:298, 0:2], axes_labels=['$\mu Seconds$','$kA$'], color='blue', legend_label = '$r=4.445cm$')
+
+crushSmall = Crusher()
+crushSmall.setr(1.9055e-2)
+crushSmall.setTemp(4.2)
+crushSmall.simulate(298)
+#The currents should overlay each other
+Tc = list_plot(crushSmall.coilOutTime[0:298, 0:2], color='red',  legend_label = '$r=1.9055cm$')
+show(Sc + Tc)
+///
+__main__:378: RuntimeWarning: overflow encountered in double_scalars
+Traceback (most recent call last):    crushBig.simulate(298)
+  File "", line 1, in <module>
+    
+  File "/tmp/tmpzThyet/___code___.py", line 14, in <module>
+    crushSmall.simulate(_sage_const_298 )
+  File "/tmp/tmpCp1uax/___code___.py", line 466, in simulate
+    self.mfull = self.find_mutual_inductance(self.mfull)
+  File "/tmp/tmpCp1uax/___code___.py", line 208, in find_mutual_inductance
+    mfullarray[i,j] = dbcoilflux(self.r[i], self.z[j]-self.z[i], self.r[j]-self.dr[j], _sage_const_1 )
+  File "expression.pyx", line 1178, in sage.symbolic.expression.Expression.__float__ (sage/symbolic/expression.cpp:8057)
+TypeError: unable to simplify to float approximation
+}}}
+
+{{{id=72|
+Sc = list_plot(crushBig.coilOutTime[0:244, 0:2], axes_labels=['$\mu Seconds$','$kA$'], color='blue', legend_label = '$r=4.445cm$', title = '$Temperature=4.2K$')
+Tc = list_plot(crushSmall.coilOutTime[0:244, 0:2], color='red',  legend_label = '$r=1.9055cm$')
+show(Sc + Tc)
+///
+<html><font color='black'><img src='cell://sage0.png'></font></html>
+}}}
+
+{{{id=73|
+np.amax(crushSmall.coilOutTime[0:244, 1])
+///
+64.658702716206079
+}}}
+
+{{{id=74|
+np.amax(crushBig.coilOutTime[0:244, 1])
+///
+36.911822484749614
+}}}
+
 {{{id=66|
 #This simulation compares the crusher currents and temperatures at room temp to 4.2 K
 crushHe42 = Crusher()
@@ -588,9 +640,12 @@ show(St + Tt)
 #radius as the z goes from 0 to just less than the radius of the coil
 Bzradius(rcoil, z, curren) = dbcoilbz(rcoil, z, rcoil*(1-(z/rcoil)^2)^0.5, curren)
 Hc(z) = 0.760
-Hcoil = plot(Bzradius(2.43e-2, z, 42000), 0.001, 2.42e-2, axes_labels=['$meters$','$kGauss$'], legend_label = '$H radius = 2.43 cm$')
-Hcoil2 = plot(Bzradius(3.43e-2, z, 42000), 0.001, 3.42e-2, axes_labels=['$meters$','$kGauss$'], legend_label = '$H radius = 3.43 cm$')
-Hcritical = plot(Hc(z), 0.001, 3.42e-2, color = 'red',  legend_label = '$Hc Pb$')
+
+Hcoil = plot(Bzradius(1.9055e-2, z, 64658), 0.001, 1.8955e-2, axes_labels=['$meters$','$kGauss$'], legend_label = '$H radius = 1.9055 cm$', title = '$Temperature=4.2K$')
+
+Hcoil2 = plot(Bzradius(4.445e-2, z, 36912), 0.001, 4.435e-2, color = 'green', axes_labels=['$meters$','$kGauss$'], legend_label = '$H radius = 4.445 cm$')
+
+Hcritical = plot(Hc(z), 0.001, 4.445e-2, color = 'red',  legend_label = '$Hc Pb$')
 show(Hcoil + Hcoil2 + Hcritical)
 ///
 <html><font color='black'><img src='cell://sage0.png'></font></html>
