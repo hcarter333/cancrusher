@@ -198,6 +198,10 @@ class Crusher:
             self.temp[i] = Temperature
 
 
+    #Set the initial voltage on the capacitor
+    def setVnought(self, Voltage):
+        self.V0[0] = Voltage
+    
     #The mutual inductance array has to be calculated multiple times, so I'm putting 
     #it into a Python funcion, (I hope)
     def find_mutual_inductance(self, mfullarray):
@@ -516,15 +520,15 @@ class Crusher:
 #This simulation checks that setr doesn't break anything
 #passes as of 2014/7/30 16:31 CST
 crushR = Crusher()
-crushR.setr(3.43e-2)
+#crushR.setr(3.43e-2)
 crushR.simulate(298)
 Sc = list_plot(crushR.coilOutTime[0:298, 0:2], axes_labels=['$\mu Seconds$','$kA$'], color='blue', legend_label = '$4.2 K$')
 
-crush_old_r = Crusher()
-crush_old_r.simulate(298)
+#crush_old_r = Crusher()
+#crush_old_r.simulate(298)
 #The currents should overlay each other
-Tc = list_plot(crush_old_r.coilOutTime[0:298, 0:2], color='red',  legend_label = '$293 K$')
-show(Sc + Tc)
+#Tc = list_plot(crush_old_r.coilOutTime[0:298, 0:2], color='red',  legend_label = '$293 K$')
+show(Sc)
 ///
 <html><font color='black'><img src='cell://sage0.png'></font></html>
 }}}
