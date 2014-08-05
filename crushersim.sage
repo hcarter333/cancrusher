@@ -123,6 +123,7 @@ class Crusher:
         self.coilI = np.array(range(self.ntim+1), dtype=float)
         self.coilOutTime = np.array(range((self.ntim+1)*2), dtype=float)
         self.coilOutTime.shape = (self.ntim+1, 2)
+        #self.coilOutTime = np.zeros((self.ntim+1, 2), dtype=float)
         self.coilOutTemp= np.array(range((self.ntim+1)*2), dtype=float)
         self.coilOutTemp.shape = (self.ntim+1, 2)
         self.bzero = np.array(range(self.ntim+1), dtype=float)
