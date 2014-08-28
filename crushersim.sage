@@ -26,6 +26,8 @@ bzfac(rcoil, zc, rc) = ((rcoil^2-rc^2)-zc^2)/(((rcoil-rc)^2)+zc^2)
 #Also, the term containing perm0 was supposed to be multiplied, not added
 dbcoilbz(rcoil, zc, rc, curren) = (bzfac(rcoil, zc, rc)*elliptic_ec(argm(rcoil, zc, rc))+elliptic_kc(argm(rcoil, zc, rc)))*((2*perm0*curren/(2*pi))/(t(rcoil, zc, rc)^0.5))
 
+#method for finding the magnetic field vs the z coponent
+Bzradius(rcoil, z, curren) = dbcoilbz(rcoil, z, rcoil*(1-(z/rcoil)^2)^0.5, curren)
 
 global mfull
 
@@ -121,10 +123,14 @@ class Crusher:
         self.movecan = True
 
         self.coilI = np.array(range(self.ntim+1), dtype=float)
-        self.coilOutTime = np.array(range((self.ntim+1)*2), dtype=float)
-        self.coilOutTime.shape = (self.ntim+1, 2)
-        self.coilOutTemp= np.array(range((self.ntim+1)*2), dtype=float)
-        self.coilOutTemp.shape = (self.ntim+1, 2)
+        #self.coilOutTime = np.array(range((self.ntim+1)*2), dtype=float)
+        #self.coilOutTime.shape = (self.ntim+1, 2)
+        self.coilOutTime = np.zeros((self.ntim+1, 2), dtype=float)
+        
+        #self.coilOutTemp= np.array(range((self.ntim+1)*2), dtype=float)        
+        #self.coilOutTemp.shape = (self.ntim+1, 2)
+        self.coilOutTemp = np.zeros((self.ntim+1, 2), dtype=float)
+        
         self.bzero = np.array(range(self.ntim+1), dtype=float)
         self.zeroline = np.array(range(self.ntim+1), dtype=float)
         self.heatenrg = np.array(range(self.ntim+1), dtype=float)
@@ -232,6 +238,14 @@ class Crusher:
             
         return mfullarray
 
+    #function to return the maximum current in the driving coil
+    def get_max_current(self):
+        return np.amax(self.coilOutTime[0:298, 1])
+    
+    #Return a plot of the magnetic field along the spherical sample as a function of z
+    def get_sphere_field_z(self):
+        return plot(Bzradius(self.r[0], z, self.get_max_current()*1000), 0.001, self.r[0] - (.01 * self.r[0]), axes_labels=['$meters$','$kGauss$'], legend_label = '$H radius = 1.9055 cm$', title = '$Temperature=4.2K$')
+    
     #also create a function here that encapsulates the reduced array creation
     #since this will need to be called multiple times
     def make_reduced_matrix(self, mreduced, mfullwork):
