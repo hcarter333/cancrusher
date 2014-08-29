@@ -244,7 +244,7 @@ class Crusher:
     
     #Return a plot of the magnetic field along the spherical sample as a function of z
     def get_sphere_field_z(self):
-        return plot(Bzradius(self.r[0], z, self.get_max_current()*1000), 0.001, self.r[0] - (.01 * self.r[0]), axes_labels=['$meters$','$kGauss$'], legend_label = '$H radius = 1.9055 cm$', title = '$Temperature=4.2K$')
+        return plot(Bzradius(self.r[0], z, self.get_max_current()*1000), 0.001, self.r[0] - (.01 * self.r[0]), axes_labels=['$meters$','$kGauss$'], legend_label = '$H radius = {0} cm$'.format(self.r[0]*100), title = '$Temperature=4.2K$', gridlines=True)
     
     #also create a function here that encapsulates the reduced array creation
     #since this will need to be called multiple times
