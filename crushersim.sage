@@ -26,8 +26,16 @@ bzfac(rcoil, zc, rc) = ((rcoil^2-rc^2)-zc^2)/(((rcoil-rc)^2)+zc^2)
 #Also, the term containing perm0 was supposed to be multiplied, not added
 dbcoilbz(rcoil, zc, rc, curren) = (bzfac(rcoil, zc, rc)*elliptic_ec(argm(rcoil, zc, rc))+elliptic_kc(argm(rcoil, zc, rc)))*((2*perm0*curren/(2*pi))/(t(rcoil, zc, rc)^0.5))
 
+#r direction magnetic field
+#for the moment, never pass this method an r value of zero
+brfac(rcoil, zc, rc) = ((rcoil^2+rc^2)+zc^2)/(((rcoil-rc)^2)+zc^2)
+dbcoilbr(rcoil, zc, rc, curren) = (2*perm0*curren/(2*pi))*zc*(brfac(rcoil, zc, rc)*elliptic_ec(argm(rcoil, zc, rc)) - elliptic_kc(argm(rcoil, zc, rc)))/(t(rcoil, zc, rc)^0.5)/rc
+
 #method for finding the magnetic field vs the z coponent
 Bzradius(rcoil, z, curren) = dbcoilbz(rcoil, z, rcoil*(1-(z/rcoil)^2)^0.5, curren)
+
+#Same thing for the radial component
+Brradius(rcoil, z, curren) = dbcoilbr(rcoil, z, rcoil*(1-(z/rcoil)^2)^0.5, curren)
 
 global mfull
 
@@ -243,8 +251,14 @@ class Crusher:
         return np.amax(self.coilOutTime[0:298, 1])
     
     #Return a plot of the magnetic field along the spherical sample as a function of z
+    #This returns the z component only
     def get_sphere_field_z(self):
         return plot(Bzradius(self.r[0], z, self.get_max_current()*1000), 0.001, self.r[0] - (.01 * self.r[0]), axes_labels=['$meters$','$kGauss$'], legend_label = '$H radius = {0} cm$'.format(self.r[0]*100), title = '$Temperature=4.2K$', gridlines=True)
+
+    #Return a plot of the magnetic field along the spherical sample as a function of z
+    #This returns the z component only
+    def get_sphere_field_r(self):
+        return plot(Brradius(self.r[0], z, self.get_max_current()*1000), 0.001, self.r[0] - (.01 * self.r[0]), axes_labels=['$r meters$','$kGauss$'], legend_label = '$H radius = {0} cm$'.format(self.r[0]*100), title = '$Temperature=4.2K$', gridlines=True)
     
     #also create a function here that encapsulates the reduced array creation
     #since this will need to be called multiple times
