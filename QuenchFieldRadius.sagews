@@ -16,6 +16,8 @@ Sc = list_plot(crushR.coilOutTime[0:tickcount, 0:2], axes_labels=['$\mu Seconds$
 Tc = list_plot(crushR.coilOutTemp[0:tickcount - 3, 0:2], axes_labels=['$\mu Seconds$','$degrees K$'], color='blue', legend_label = '$4.2 K$')
 Bc = crushR.get_sphere_field_z()
 HcPb = plot(.670, 0, .038, color = 'red')
+Bcr = crushR.get_sphere_field_r()
 show(Sc)
 show(Tc)
 show(Bc + HcPb)
+show(Bcr)
